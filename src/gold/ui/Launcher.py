@@ -10,25 +10,33 @@ DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 400
 DEFAULT_MARGIN = 12
 BOARD_SPACES = 19
+diam = (float(DEFAULT_WIDTH)-2*float(DEFAULT_MARGIN))/float(BOARD_SPACES-1)
 
 ''' Places a stone of color 'color' on the 
     space nearest (x, y) on Canvas C. 
 '''
 
 def computeSpace(x_coord, y_coord):
-    diam = (float(DEFAULT_WIDTH)-2*float(DEFAULT_MARGIN))/float(BOARD_SPACES-1)
     i = int(round((x_coord-DEFAULT_MARGIN)/diam))
+    if( i<0 ):
+        i=0
+    elif( i>BOARD_SPACES-1 ):
+        i = BOARD_SPACES - 1
     j = int(round((y_coord-DEFAULT_MARGIN)/diam))
+    if( j<0 ):
+        j=0
+    elif( j>BOARD_SPACES-1 ):
+        j = BOARD_SPACES - 1
     return [i, j]
 
 def computeCoord(i, j):
-    diam = (float(DEFAULT_WIDTH)-2*float(DEFAULT_MARGIN))/float(BOARD_SPACES-1)
     x = round((i)*diam)+(round(diam/2.0))+1
     y = round((j)*diam)+(round(diam/2.0))+1
     return [x, y]
 
 def placeStoneNear(C, board, x, y, color):
     [i, j] = computeSpace(x, y)
+    print("({},{}) is over space ({},{})".format(x,y,i,j))
     if not board.board_spaces[i][j] == '0':
         print ("There's already a stone at ({}, {}).".format(i, j))
     else:
