@@ -50,6 +50,14 @@ def drawStone(C, i, j, color):
     x0 = x0-9
     y0 = y0-9
     C.create_oval(x0, y0, x1, y1, fill=color)
+
+def drawPoint(C, i, j):
+    [x0, y0] = computeCoord(i, j)
+    x1 = x0+5
+    y1 = y0+5
+    x0 = x0-4
+    y0 = y0-4
+    C.create_oval(x0, y0, x1, y1, fill='black')
     
 def redrawBoard(C, board):
     i = 0
@@ -62,29 +70,43 @@ def redrawBoard(C, board):
                 drawStone(C, i, j, 'white')
             j = j + 1
         i = i + 1
+
+def drawGrid(C, w, h, margin, spaces):
+    for i in range(spaces):
+        C.create_line(margin, margin+i*diam, w-margin, margin+i*diam)
+        C.create_line(margin+i*diam, margin, margin+i*diam, h-margin )
+    drawPoint(C, 3, 3)
+    drawPoint(C, 3, spaces-4)
+    drawPoint(C, spaces-4, 3)
+    drawPoint(C, spaces-4, spaces-4)
+    drawPoint(C, 3, (spaces-1)/2)
+    drawPoint(C, (spaces-1)/2, 3)
+    drawPoint(C, (spaces-1)/2, (spaces-1)/2)
+    drawPoint(C, spaces-4, (spaces-1)/2)
+    drawPoint(C, (spaces-1)/2, spaces-4)
     
-                
 ''' Draws board dim_x x dim_y pixels, with margin 'margin' 
     and number of spaces 'spaces'. Only tested with (400, 400, 12, 19).   
 ''' 
 def drawBoard(dim_x, dim_y, margin, spaces):
     
     master = Tk()
-    boardPic = PhotoImage(file="go-board.gif")
-    w = Canvas(master, width=dim_x, height=dim_y)
-    w.pack()
-    w.create_image(dim_x/2, dim_y/2, image=boardPic)
+    diam = (float(dim_x)-2*float(margin))/float(spaces-1)
+    
+    C = Canvas(master, width=dim_x, height=dim_y, bg='#d8af4f')
+    C.pack()
+    drawGrid(C, dim_x, dim_y, margin, spaces)
     board = BoardStub()
-    redrawBoard(w, board)
+    redrawBoard(C, board)
     def callback(event):
         print "clicked at", event.x, event.y
-        placeStoneNear(w, board, event.x, event.y, 'white')
+        placeStoneNear(C, board, event.x, event.y, 'white')
     def callback2(event):
         print "rt-clicked at", event.x, event.y
-        placeStoneNear(w, board, event.x, event.y, 'black')
+        placeStoneNear(C, board, event.x, event.y, 'black')
     # Left-click for white, right-click for black
-    w.bind("<Button-1>", callback)
-    w.bind("<Button-3>", callback2)
+    C.bind("<Button-1>", callback)
+    C.bind("<Button-3>", callback2)
     mainloop()
 
 drawBoard(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_MARGIN, BOARD_SPACES)
