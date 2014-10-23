@@ -17,36 +17,24 @@ BOARD_SPACES = 19
 
 def computeSpace(x_coord, y_coord):
     diam = (float(DEFAULT_WIDTH)-2*float(DEFAULT_MARGIN))/float(BOARD_SPACES-1)
-    i = int(round((x_coord-DEFAULT_MARGIN)/diam))+1
-    j = int(round((y_coord-DEFAULT_MARGIN)/diam))+1
-    #x0 = round(round((x_coord-DEFAULT_MARGIN)/diam)*diam)+(round(diam)/2)+1
-    #y0 = round(round((y_coord-DEFAULT_MARGIN)/diam)*diam)+(round(diam)/2)+1
+    i = int(round((x_coord-DEFAULT_MARGIN)/diam))
+    j = int(round((y_coord-DEFAULT_MARGIN)/diam))
     return [i, j]
 
 def computeCoord(i, j):
     diam = (float(DEFAULT_WIDTH)-2*float(DEFAULT_MARGIN))/float(BOARD_SPACES-1)
-    x = round(i*diam)+(round(diam/2.0))+1
-    y = round(j*diam)+(round(diam/2.0))+1
+    x = round((i)*diam)+(round(diam/2.0))+1
+    y = round((j)*diam)+(round(diam/2.0))+1
     return [x, y]
 
 def placeStoneNear(C, board, x, y, color):
-    
-    #diam = (float(DEFAULT_WIDTH)-2*float(DEFAULT_MARGIN))/float(BOARD_SPACES-1)
-    #x0 = round(round((x-DEFAULT_MARGIN)/diam)*diam)+2
-    #x1 = x0+round(diam)-2
-    #y0 = round(round((y-DEFAULT_MARGIN)/diam)*diam)+2
-    #y1 = y0+round(diam)-2
     [i, j] = computeSpace(x, y)
-    board.placeStone(i, j, color)
-    redrawBoard(C, board)
-    #drawStone(C, i, j, color)
-    #[x0, y0] = computeCoord(i, j)
-    #x1 = x0+10
-    #y1 = y0+10
-    #x0 = x0-9
-    #y0 = y0-9
-    #C.create_oval(x0, y0, x1, y1, fill=color)
-
+    if not board.board_spaces[i][j] == '0':
+        print ("There's already a stone at ({}, {}).".format(i, j))
+    else:
+        board.placeStone(i, j, color)
+        redrawBoard(C, board)
+    
 def drawStone(C, i, j, color):
     [x0, y0] = computeCoord(i, j)
     x1 = x0+10
