@@ -28,7 +28,7 @@ class Launcher:
         self.margin = margin
         self.spaces = spaces
         self.diam = (float(dim_x)-2*float(margin))/float(spaces-1)
-        self.board = Board(dim_x, dim_y)
+        self.board = Board(spaces, spaces)
         self.master = Tk()
         self.C = None
         #self.C = Canvas(self.master, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
@@ -53,16 +53,18 @@ class Launcher:
     
     def placeStoneNear(self, C, x, y, color):
         [i, j] = self.computeSpace(x, y)
-        print("({},{}) is over space ({},{})".format(x,y,i,j))
+        #print("({},{}) is over space ({},{})".format(x,y,i,j))
+        print("test.place_stone({},{}, {})".format(i,j, color=='black'))
         if not self.board.board_spaces()[i][j] == '0':
             print ("There's already a stone at ({}, {}).".format(i, j))
         else:
             self.board.place_stone(i, j, color=='black')
+            print(self.board)
             self.drawBoard()
 
     def drawStone(self, C, i, j, color):
         [x0, y0] = self.computeCoord(i, j)
-        print("Drawing stone ({},{}) at coordinates ({},{})".format(i,j,x0,y0))
+        #print("Drawing stone ({},{}) at coordinates ({},{})".format(i,j,x0,y0))
         x1 = x0+self.diam/2 #10
         y1 = y0+self.diam/2 #10
         x0 = x0+1-self.diam/2 #9
@@ -78,7 +80,7 @@ class Launcher:
         C.create_oval(x0, y0, x1, y1, fill='black')
         
     def drawGrid(self):
-        print("self.diam={}".format(self.diam))
+        #print("self.diam={}".format(self.diam))
         for i in range(self.spaces):
             self.C.create_line(self.margin, self.margin+i*self.diam, self.dim_x-self.margin, self.margin+i*self.diam)
             self.C.create_line(self.margin+i*self.diam, self.margin, self.margin+i*self.diam, self.dim_y-self.margin )
@@ -95,17 +97,6 @@ class Launcher:
     ''' Draws board dim_x x dim_y pixels, with margin 'margin' 
         and number of spaces 'spaces'. Only tested with (400, 400, 12, 19).   
     ''' 
-    #def drawBoard(self, dim_x, dim_y, margin, spaces):
-        
-        #master = Tk()
-        #diam = (float(dim_x)-2*float(margin))/float(spaces-1)
-        #print ('{}-2x{}/{} = {}'.format(dim_x, margin, spaces-1, diam))
-        #C = Canvas(master, width=dim_x, height=dim_y, bg='#d8af4f')
-        #C.pack()
-        #drawGrid(C, dim_x, dim_y, diam, margin, spaces)
-        #board = Board(dim_x, dim_y)
-#        self.redrawBoard()
-
     def drawBoard(self): #board, dim_x, dim_y, diam, margin, spaces):
         #board = Board(dim_x, self.dim_y)
         #redrawBoard(C, board, diam, margin)
@@ -127,17 +118,17 @@ class Launcher:
                 j = j + 1
             i = i + 1
         def callback(event):
-            print "clicked at", event.x, event.y
+            #print "clicked at", event.x, event.y
             self.placeStoneNear(self.C, event.x, event.y, 'white')
         def callback2(event):
-            print "rt-clicked at", event.x, event.y
+            #print "rt-clicked at", event.x, event.y
             self.placeStoneNear(self.C, event.x, event.y, 'black')
         # Left-click for white, right-click for black
         self.C.bind("<Button-1>", callback)
         self.C.bind("<Button-3>", callback2)
         mainloop()
     
-ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_MARGIN, DEFAULT_SPACES)
-#ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, 35,9)
+#ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_MARGIN, DEFAULT_SPACES)
+ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, 25,7)
 ui.drawBoard()
 #drawBoard(500,500, 65, 7)
