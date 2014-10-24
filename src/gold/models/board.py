@@ -1,10 +1,12 @@
+from array import array
+
 class IllegalMove(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-class board:
+class Board:
     x = 0
     y = 0
     white_stones = None
@@ -29,6 +31,20 @@ class board:
             ans += "\n"
         return ans
         
+    def board_spaces(self):
+        state = []
+        for i in range(self.x):
+            row = array('c')
+            for j in range(self.y):
+                if (i,j) in self.white_stones:
+                    row.append('w')
+                elif (i,j) in self.black_stones:
+                    row.append('b')
+                else:
+                    row.append('0')
+            state.append(row)
+        return state
+    
     def place_stone(self, x, y, isblack):
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
             raise IllegalMove("Out of the Bounds of the Go Board")
