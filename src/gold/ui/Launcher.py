@@ -20,7 +20,9 @@ class Launcher:
     margin = DEFAULT_MARGIN
     spaces = DEFAULT_SPACES
     diam = (float(dim_x)-2*float(margin))/float(spaces-1)
-    board = Board(dim_x, dim_y)
+    board = Board(spaces, spaces)
+    ovals = []
+    C=None
     
     def __init__(self, dim_x, dim_y, margin, spaces):
         self.dim_x = dim_x
@@ -30,16 +32,25 @@ class Launcher:
         self.diam = (float(dim_x)-2*float(margin))/float(spaces-1)
         self.board = Board(spaces, spaces)
         self.master = Tk()
-        self.C = None
-        #self.C = Canvas(self.master, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
-
+        self.C = Canvas(self.master, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
+        self.C.pack()
+        self.drawGrid()
+        def callback(event):
+            self.placeStoneNear(event.x, event.y, 'white')
+        def callback2(event):
+            self.placeStoneNear(event.x, event.y, 'black')
+        # Left-click for white, right-click for black
+        self.C.bind("<Button-1>", callback)
+        self.C.bind("<Button-3>", callback2)
+        mainloop()
+        
     def computeSpace(self, x_coord, y_coord):
-        i = int(round((x_coord-self.margin)/self.diam))
+        i = int(round((y_coord-self.margin)/self.diam))
         if( i<0 ):
             i=0
         elif( i>self.spaces-1 ):
             i = self.spaces - 1
-        j = int(round((y_coord-self.margin)/self.diam))
+        j = int(round((x_coord-self.margin)/self.diam))
         if( j<0 ):
             j=0
         elif( j>self.spaces-1 ):
@@ -47,13 +58,12 @@ class Launcher:
         return [i, j]
     
     def computeCoord(self, i, j):
-        x = self.margin+round((i)*self.diam) #+(round(diam/2.0))+1
-        y = self.margin + round((j)*self.diam) #+(round(diam/2.0))+1
+        y = self.margin+round((i)*self.diam) 
+        x = self.margin + round((j)*self.diam)
         return [x, y]
     
-    def placeStoneNear(self, C, x, y, color):
+    def placeStoneNear(self, x, y, color):
         [i, j] = self.computeSpace(x, y)
-        #print("({},{}) is over space ({},{})".format(x,y,i,j))
         print("test.place_stone({},{}, {})".format(i,j, color=='black'))
         if not self.board.board_spaces()[i][j] == '0':
             print ("There's already a stone at ({}, {}).".format(i, j))
@@ -62,73 +72,62 @@ class Launcher:
             print(self.board)
             self.drawBoard()
 
-    def drawStone(self, C, i, j, color):
+    def drawStone(self, i, j, color):
         [x0, y0] = self.computeCoord(i, j)
-        #print("Drawing stone ({},{}) at coordinates ({},{})".format(i,j,x0,y0))
         x1 = x0+self.diam/2 #10
         y1 = y0+self.diam/2 #10
         x0 = x0+1-self.diam/2 #9
         y0 = y0+1-self.diam/2
-        C.create_oval(x0, y0, x1, y1, fill=color)
+        self.ovals.append(self.C.create_oval(x0, y0, x1, y1, fill=color, tags=color))
 
-    def drawPoint(self, C, i, j):
+    def drawPoint(self, i, j):
         [x0, y0] = self.computeCoord(i, j)
         x1 = x0+5
         y1 = y0+5
         x0 = x0-4
         y0 = y0-4
-        C.create_oval(x0, y0, x1, y1, fill='black')
+        self.ovals.append(self.C.create_oval(x0, y0, x1, y1, fill='black'))
         
     def drawGrid(self):
-        #print("self.diam={}".format(self.diam))
         for i in range(self.spaces):
             self.C.create_line(self.margin, self.margin+i*self.diam, self.dim_x-self.margin, self.margin+i*self.diam)
             self.C.create_line(self.margin+i*self.diam, self.margin, self.margin+i*self.diam, self.dim_y-self.margin )
-        self.drawPoint(self.C, 3, 3)
-        self.drawPoint(self.C, 3, self.spaces-4)
-        self.drawPoint(self.C, self.spaces-4, 3)
-        self.drawPoint(self.C, self.spaces-4, self.spaces-4)
-        self.drawPoint(self.C, 3, (self.spaces-1)/2)
-        self.drawPoint(self.C, (self.spaces-1)/2, 3)
-        self.drawPoint(self.C, (self.spaces-1)/2, (self.spaces-1)/2)
-        self.drawPoint(self.C, self.spaces-4, (self.spaces-1)/2)
-        self.drawPoint(self.C, (self.spaces-1)/2, self.spaces-4)
+        self.drawPoint(3, 3)
+        self.drawPoint(3, self.spaces-4)
+        self.drawPoint(self.spaces-4, 3)
+        self.drawPoint(self.spaces-4, self.spaces-4)
+        self.drawPoint(3, (self.spaces-1)/2)
+        self.drawPoint((self.spaces-1)/2, 3)
+        self.drawPoint((self.spaces-1)/2, (self.spaces-1)/2)
+        self.drawPoint(self.spaces-4, (self.spaces-1)/2)
+        self.drawPoint((self.spaces-1)/2, self.spaces-4)
 
     ''' Draws board dim_x x dim_y pixels, with margin 'margin' 
         and number of spaces 'spaces'. Only tested with (400, 400, 12, 19).   
     ''' 
     def drawBoard(self): #board, dim_x, dim_y, diam, margin, spaces):
-        #board = Board(dim_x, self.dim_y)
-        #redrawBoard(C, board, diam, margin)
-        if self.C:
-            self.C.destroy()
-        self.C = Canvas(self.master, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
-        self.C.pack()
-        #self.C =Canvas(self.master, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
-        self.drawGrid()
-        # bg='#d8af4f'
-        i = 0
-        for row in self.board.board_spaces():
-            j = 0 
-            for space in row: 
-                if space=='b': 
-                    self.drawStone(self.C, i, j, 'black')
-                elif space=='w':
-                    self.drawStone(self.C, i, j, 'white')
-                j = j + 1
-            i = i + 1
-        def callback(event):
-            #print "clicked at", event.x, event.y
-            self.placeStoneNear(self.C, event.x, event.y, 'white')
-        def callback2(event):
-            #print "rt-clicked at", event.x, event.y
-            self.placeStoneNear(self.C, event.x, event.y, 'black')
-        # Left-click for white, right-click for black
-        self.C.bind("<Button-1>", callback)
-        self.C.bind("<Button-3>", callback2)
-        mainloop()
+        #i = 0
+
+        for c in self.C.children:
+            c.destroy()
+        #for oval in self.ovals:
+        #    oval.destroy()
+        self.C.delete('white')
+        for white_stone in self.board.white_stones:
+            self.drawStone(white_stone[0],white_stone[1], 'white')
+        self.C.delete('black')
+        for black_stone in self.board.black_stones:
+            self.drawStone(black_stone[0],black_stone[1], 'black')
+        #for row in self.board.board_spaces():
+        #    j = 0 
+        #    for space in row: 
+        #        if space=='b': 
+        #            self.drawStone(self.C, i, j, 'black')
+        #        elif space=='w':
+        #            self.drawStone(self.C, i, j, 'white')
+        #        j = j + 1
+        #    i = i + 1
     
 #ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_MARGIN, DEFAULT_SPACES)
-ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, 25,7)
+ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, 30,5)
 ui.drawBoard()
-#drawBoard(500,500, 65, 7)
