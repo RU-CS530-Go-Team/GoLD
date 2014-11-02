@@ -4,7 +4,11 @@ Created on Oct 21, 2014
 @author: JBlackmore
 '''
 from Tkinter import *
+
+from gold.models.Problem import Problem
 from gold.models.board import Board
+from gold.models.search import MinMaxTree
+
 
 DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 400
@@ -38,10 +42,22 @@ class Launcher:
         def callback(event):
             self.placeStoneNear(event.x, event.y, 'white')
         def callback2(event):
+            [i, j] = self.computeSpace(event.x, event.y)
             self.placeStoneNear(event.x, event.y, 'black')
+            self.goForWhite(i, j)
         # Left-click for white, right-click for black
-        self.C.bind("<Button-1>", callback)
-        self.C.bind("<Button-3>", callback2)
+        self.C.bind("<Button-1>", callback2)
+        #self.C.bind("<Button-3>", callback2)
+        
+
+    def goForWhite(self, pi, pj):
+        tree = MinMaxTree(self.board, False, True, 0, 0.0, 'b({},{})'.format(pi,pj))
+        [i, j] = tree.decideNextMove()
+        self.board.place_stone(i, j, False)
+        #print(self.board)
+        self.drawBoard()
+
+    def mainloop(self):        
         mainloop()
         
     def computeSpace(self, x_coord, y_coord):
@@ -64,12 +80,13 @@ class Launcher:
     
     def placeStoneNear(self, x, y, color):
         [i, j] = self.computeSpace(x, y)
-        print("test.place_stone({},{}, {})".format(i,j, color=='black'))
-        if not self.board.board_spaces()[i][j] == '0':
+        #print("test.place_stone({},{}, {})".format(i,j, color=='black'))
+        #if not self.board.board_spaces()[i][j] == '0':
+        if (i,j) in self.board.white_stones+self.board.black_stones:
             print ("There's already a stone at ({}, {}).".format(i, j))
         else:
             self.board.place_stone(i, j, color=='black')
-            print(self.board)
+            #print(self.board)
             self.drawBoard()
 
     def drawStone(self, i, j, color):
@@ -87,6 +104,8 @@ class Launcher:
         x0 = x0-4
         y0 = y0-4
         self.ovals.append(self.C.create_oval(x0, y0, x1, y1, fill='black'))
+    def setBoard(self, newboard):
+        self.board = newboard
         
     def drawGrid(self):
         for i in range(self.spaces):
@@ -129,5 +148,19 @@ class Launcher:
         #    i = i + 1
     
 #ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_MARGIN, DEFAULT_SPACES)
-ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, 30,5)
+#ui=Launcher(DEFAULT_WIDTH, DEFAULT_HEIGHT, 30,5)
+#ui.drawBoard()
+'''
+p1 = Problem('c:/users/jblackmore/Documents/Personal/Rutgers/530/gold/dataset/9286.sgf')
+ui = Launcher(400,400,30,19)
+mmt = MinMaxTree(p1.start, True, False, 0, 0.0)
+print("Value={}".format(mmt.value))
+ui.setBoard(p1.start)
 ui.drawBoard()
+ui.mainloop()
+'''
+ui = Launcher(400,400,50,5)
+ui.drawBoard()
+ui.mainloop()
+
+
