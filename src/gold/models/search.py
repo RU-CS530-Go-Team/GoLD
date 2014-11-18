@@ -4,6 +4,7 @@ Created on Nov 1, 2014
 @author: JBlackmore
 '''
 from gold.models.board import Board
+from gold.features.StoneCountFeature import StoneCountFeature
 
 MAXDEPTH = 3
 class MinMaxTree:
@@ -45,9 +46,9 @@ class MinMaxTree:
                         self.children.append(child)
             
     def evaluateMove(self, move, i, j, isblack):
-        blackdiff = len(move.black_stones)-len(self.board.black_stones)
-        whitediff = len(move.white_stones)-len(self.board.white_stones)
-        return blackdiff - whitediff
+        features = [StoneCountFeature(self.board, move).calculate_feature()]
+        # h(x) = scikit-learn...
+        return features[0]
 
     def isNearStones(self, i, j, isblack):
         all_stones = self.board.white_stones+self.board.black_stones
