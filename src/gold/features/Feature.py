@@ -4,6 +4,8 @@ Created on Nov 17, 2014
 @author: JBlackmore
 '''
 
+from gold.models.board import StoneGrouper
+
 class Feature():
     '''
     classdocs
