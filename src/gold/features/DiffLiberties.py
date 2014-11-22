@@ -4,6 +4,7 @@ Created on Nov 22, 2014
 @author: JGang
 '''
 from Feature import Feature
+from gold.models.board import StoneGrouper
 
 class DiffLiberties(Feature):
     '''
