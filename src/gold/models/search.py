@@ -84,11 +84,11 @@ class MinMaxTree:
         else:
             c = self.bestChild(-100000.0)
         print('Best move for {}: ({},{})'.format(('black' if self.isblack else 'white'), c.i,c.j))
-        groups = StoneGrouper(c.board, True).groups
+        groups = StoneGrouper(c.board.black_stones).groups
         print('Black has {} groups:'.format(len(groups)))
         for g in groups:
             print('  . {}'.format(g))
-        groups = StoneGrouper(c.board, False).groups
+        groups = StoneGrouper(c.board.white_stones).groups
         print('White has {} groups:'.format(len(groups)))
         for g in groups:
             print('  . {}'.format(g))

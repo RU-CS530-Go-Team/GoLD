@@ -117,6 +117,7 @@ class Board:
  of the same color into sets. 
 '''
 class StoneGrouper():
+    ''' Doesnt really need the board... could just have stones 
     def __init__(self, board, isblack):
         self.board = board
         self.isblack = isblack
@@ -125,7 +126,14 @@ class StoneGrouper():
         else:
             self.stones = board.white_stones
         self.group_stones()
-    
+    '''
+
+    ''' Doesnt really need the board... could just have stones  ''' 
+    def __init__(self, stones):
+        self.board = None
+        self.stones = stones
+        self.group_stones()
+            
     def find(self, element):
         for subset in self.groups:
             if element in subset:
