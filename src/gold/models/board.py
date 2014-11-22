@@ -1,5 +1,5 @@
 from array import array
-
+ 
 class IllegalMove(Exception):
     def __init__(self, value):
         self.value = value
@@ -45,6 +45,13 @@ class Board:
             state.append(row)
         return state
     
+    def group_stones(self, isblack):
+        if isblack:
+            stones = [{x} for x in self.black_stones]
+        else:
+            stones = [{x} for x in self.white_stones]
+        # union-find
+        
     def place_stone(self, x, y, isblack):
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
             raise IllegalMove("Out of the Bounds of the Go Board")
@@ -105,4 +112,54 @@ class Board:
                     self.black_stones = second
                 else:
                     self.white_stones = second
-
+'''
+ Implements union-find to group adjacent stones 
+ of the same color into sets. 
+'''
+class StoneGrouper():
+    def __init__(self, board, isblack):
+        self.board = board
+        self.isblack = isblack
+        if isblack:
+            self.stones = board.black_stones
+        else:
+            self.stones = board.white_stones
+        self.group_stones()
+    
+    def find(self, element):
+        for subset in self.groups:
+            if element in subset:
+                return subset
+        raise ValueError('{} not found'.format(element))
+    
+    def union(self, set1, set2):
+        i = self.groups.index(set1)
+        self.groups[i] = set1.union(set2)
+        self.groups.remove(set2)
+        
+    def is_space_adjacent(self, spc1, spc2):
+        x1 = spc1[0]
+        y1 = spc1[1]
+        x2 = spc2[0]
+        y2 = spc2[1]
+        if x1==x2:
+            return abs(y2-y1)==1
+        if y1==y2:
+            return abs(x2-x1)==1
+        return False
+    
+    def is_group_adjacent(self, set1, set2):
+        for spc1 in set1:
+            for spc2 in set2:
+                if self.is_space_adjacent(spc1, spc2):
+                    return True
+        return False
+    
+    def group_stones(self):
+        self.groups = [{x} for x in self.stones]
+        for i in range(len(self.stones)):
+            for j in range(i+1, len(self.stones)):
+                group1 = self.find(self.stones[i])
+                group2 = self.find(self.stones[j])
+                if group1!=group2 and self.is_group_adjacent(group1, group2):
+                    self.union(group1, group2)
