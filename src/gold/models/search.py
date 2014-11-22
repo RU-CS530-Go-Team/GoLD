@@ -3,7 +3,7 @@ Created on Nov 1, 2014
 
 @author: JBlackmore
 '''
-from gold.models.board import Board
+from gold.models.board import Board, StoneGrouper
 from gold.features.StoneCountFeature import StoneCountFeature
 
 MAXDEPTH = 3
@@ -22,7 +22,7 @@ class MinMaxTree:
         self.children = []
         self.value = value
         self.moveseries = moveseries
-        print("{}={}".format(self.moveseries, self.value))
+        #print("{}={}".format(self.moveseries, self.value))
         self.i = -1
         self.j = -1
         all_stones = self.board.white_stones+self.board.black_stones
@@ -46,7 +46,7 @@ class MinMaxTree:
                         self.children.append(child)
             
     def evaluateMove(self, move, i, j, isblack):
-        features = [StoneCountFeature(self.board, move).calculate_feature()]
+        features = [StoneCountFeature(self.board, move, (i,j), isblack).calculate_feature()]
         # h(x) = scikit-learn...
         return features[0]
 
@@ -84,4 +84,12 @@ class MinMaxTree:
         else:
             c = self.bestChild(-100000.0)
         print('Best move for {}: ({},{})'.format(('black' if self.isblack else 'white'), c.i,c.j))
+        groups = StoneGrouper(c.board, True).groups
+        print('Black has {} groups:'.format(len(groups)))
+        for g in groups:
+            print('  . {}'.format(g))
+        groups = StoneGrouper(c.board, False).groups
+        print('White has {} groups:'.format(len(groups)))
+        for g in groups:
+            print('  . {}'.format(g))
         return [c.i, c.j]

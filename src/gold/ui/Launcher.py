@@ -5,10 +5,9 @@ Created on Oct 21, 2014
 '''
 from Tkinter import *
 
-from gold.models.Problem import Problem
+#from gold.models.Problem import Problem
 from gold.models.board import Board
 from gold.models.search import MinMaxTree
-from numpy import *
 
 DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 400
