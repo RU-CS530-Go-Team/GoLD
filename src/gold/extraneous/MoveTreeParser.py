@@ -5,10 +5,10 @@ Created on Nov 6, 2014
 '''
 
 from array import array
-
+from gold.models.board import Board
 import re
 
-class MoveTreeParser:
+class MoveTreeParser():
 
   blackFirst = True
   moveID = None
@@ -30,12 +30,12 @@ class MoveTreeParser:
     gameData = gameData.replace("\r", "")
     gameData = gameData.replace(" ", "")
 
+    self.start = self.parseStartState(gameData)
     firstBlackMove = gameData.find(';B')
     firstWhiteMove = gameData.find(';W')
 
     if (firstBlackMove > firstWhiteMove):
       self.blackFirst = False
-
     position = 0
 
     if self.blackFirst:
@@ -163,3 +163,41 @@ class MoveTreeParser:
       for node in path:
         print self.getMove(node)
       print "\n"
+
+  def parseStartState(self, gameData):
+    boardSizeLocation = gameData.find("SZ")
+    sizeString = ''
+    counter = 0
+    currentChar = gameData[boardSizeLocation + counter + 3]
+    while(currentChar != ']'):
+      sizeString += currentChar
+      counter += 1
+      currentChar = gameData[boardSizeLocation + counter + 3]
+
+    if(sizeString.isdigit()):
+      size = int(sizeString)
+    else:
+      size = 19
+    currentBoard = Board(size,size)
+    whitePositionLocations = [m.start() for m in re.finditer('AW', gameData)]
+    blackPositionLocations = [m.start() for m in re.finditer('AB', gameData)]
+
+    stonePositions = whitePositionLocations + blackPositionLocations
+    stonePositions.sort()
+
+    for i in stonePositions:
+      isBlack = False
+      if i in blackPositionLocations:
+        isBlack = True
+      counter = 0
+      while(True):
+        currentChar = gameData[i + counter + 2]
+        if (currentChar != '['):
+          break
+        currentChar = gameData[i + counter + 3]
+        y = ord(currentChar) - ord('a')
+        currentChar = gameData[i + counter + 4]
+        x = ord(currentChar) - ord('a')
+        currentBoard.place_stone(x,y,isBlack)
+        counter += 4
+    return currentBoard

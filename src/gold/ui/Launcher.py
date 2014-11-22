@@ -18,20 +18,21 @@ DEFAULT_SPACES = 19
     space nearest (x, y) on Canvas C. 
 '''
 class Launcher:
-    dim_x = DEFAULT_WIDTH
-    dim_y = DEFAULT_WIDTH
-    margin = DEFAULT_MARGIN
-    spaces = DEFAULT_SPACES
-    diam = (float(dim_x)-2*float(margin))/float(spaces-1)
-    board = Board(spaces, spaces)
-    ovals = []
-    C=None
-    
+    '''    dim_x = DEFAULT_WIDTH
+        dim_y = DEFAULT_WIDTH
+        margin = DEFAULT_MARGIN
+        spaces = DEFAULT_SPACES
+        diam = (float(dim_x)-2*float(margin))/float(spaces-1)
+        board = Board(spaces, spaces)
+        ovals = []
+        C=None
+    '''    
     def __init__(self, dim_x, dim_y, margin, spaces):
         self.dim_x = dim_x
         self.dim_y = dim_y
         self.margin = margin
         self.spaces = spaces
+        self.ovals=[]
         self.diam = (float(dim_x)-2*float(margin))/float(spaces-1)
         self.board = Board(spaces, spaces)
         self.master = Tk()
@@ -158,8 +159,9 @@ ui.setBoard(p1.start)
 ui.drawBoard()
 ui.mainloop()
 '''
-ui = Launcher(400,400,50,5)
-ui.drawBoard()
-ui.mainloop()
+if __name__ == '__main__':
+    ui = Launcher(400,400,50,5)
+    ui.drawBoard()
+    ui.mainloop()
 
 
