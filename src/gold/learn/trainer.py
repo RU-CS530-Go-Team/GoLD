@@ -68,11 +68,11 @@ class MoveTrainer():
             start = mtp.start
             #print('START NEW PATH')
             for mid in path:
-                move_str = mtp.moveID[mid]
-                saysblack = move_str[0:1]=='B'
+                move_dict = mtp.formatMove(mtp.moveID[mid])
+                saysblack = move_dict['isBlack'] #move_str[0:1]=='B'
                 #print('{}''s turn'.format('black' if saysblack else 'white'))
-                move_y = ord(move_str[2]) - ord('a')
-                move_x = ord(move_str[3]) - ord('a')
+                move_y = move_dict['y'] #ord(move_str[2]) - ord('a')
+                move_x = move_dict['x'] #ord(move_str[3]) - ord('a')
                 move = Board(start.x, start.y)
                 move.white_stones = [x for x in start.white_stones]
                 move.black_stones = [y for y in start.black_stones]
@@ -90,7 +90,7 @@ class MoveTrainer():
                         movesConsidered.add((parent, mid))
                         vectors.append(features)
                 except IllegalMove as e:
-                    print('{}: {}=>({},{})'.format(e, move_str, move_x, move_y))
+                    print('{}: ({},{})'.format(e, move_x, move_y))
                 parent = mid
                 start = move
         return vectors
@@ -115,11 +115,13 @@ class MoveTrainer():
                         print('{} vectors in {}'.format(len(v), f))
                     except TypeError as te:
                         print(te)
-                    except:
-                        print('Unexpected Error: {}'.format(sys.exc_info()[0]))
+                    except Exception as e:
+                        #print('Unexpected Error: {}'.format(sys.exc_info()[0]))
+                        print('Unexpected Error: {}'.format(e))
                         subpaths = f.split('/')
                         newf = '/'.join(subpaths[:-2])+'/discard/'+subpaths[-1].split('\\')[-1]
                         print('Move {} to {}'.format(f, newf))
+                        #raise
                 fout.close()
             else:
                 self.get_vectors_from_file(ldir)
