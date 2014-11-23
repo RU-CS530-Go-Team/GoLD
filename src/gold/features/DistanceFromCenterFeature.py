@@ -10,8 +10,8 @@ class DistanceFromCenterFeature(Feature):
     classdocs
     '''
     def calculate_feature(self):
-        originalCenter = (sum([x[0] for x in self.start.black_stones + self.start.white_stones]) / (len(self.start.black_stones) + self.start.white_stones), sum([x[1] for x in self.start.black_stones + self.start.white_stones]) / (len(self.start.black_stones) + self.start.white_stones))
-        furthest = max([((x[0] - originalCenter[0]) ** 2 + (x[1] - originalCenter[1]) ** 2) ** .5 for x in self.start.black_moves + self.start.white_moves])
+        originalCenter = (sum([x[0] for x in (self.start.black_stones + self.start.white_stones)]) / (len(self.start.black_stones) + len(self.start.white_stones)), sum([x[1] for x in self.start.black_stones + self.start.white_stones]) / (len(self.start.black_stones) + len(self.start.white_stones)))
+        furthest = max([((x[0] - originalCenter[0]) ** 2 + (x[1] - originalCenter[1]) ** 2) ** .5 for x in self.start.black_stones + self.start.white_stones])
         black_move = self.movePosition
         #this shit can get replaced if we include what the move being considered is...
         '''        

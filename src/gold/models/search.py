@@ -4,7 +4,7 @@ Created on Nov 1, 2014
 @author: JBlackmore
 '''
 from gold.models.board import Board, StoneGrouper
-from gold.features.StoneCountFeature import StoneCountFeature
+from gold.learn.trainer import FeatureExtractor
 
 MAXDEPTH = 3
 class MinMaxTree:
@@ -46,7 +46,8 @@ class MinMaxTree:
                         self.children.append(child)
             
     def evaluateMove(self, move, i, j, isblack):
-        features = [StoneCountFeature(self.board, move, (i,j), isblack).calculate_feature()]
+        fe = FeatureExtractor()
+        features = fe.extract_features(self.board, move, (i,j), isblack)
         # h(x) = scikit-learn...
         return features[0]
 
