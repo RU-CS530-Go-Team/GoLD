@@ -1,4 +1,7 @@
 from sklearn import svm
+from sklearn import neighbors
+from sklearn import ensemble
+from sklearn import naive_bayes
 import numpy as np
 import pickle
 
@@ -20,7 +23,31 @@ class ModelBuilder():
     f.write(modelData)
     f.close()
 
-  def evaluateModelSVM(self,modelFile):
+  def buildModelNeighbors(self,outputFile,numNeighbors):
+    classifier = neighbors.KNeighborsClassifier(numNeighbors)
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
+
+  def buildModelNB(self,outputFile):
+    classifier = naive_bayes.GaussianNB()
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
+
+  def buildModelRF(self,outputFile,numTrees):
+    classifier = ensemble.RandomForestClassifier(numTrees)
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
+
+  def evaluateModel(self,modelFile):
     f = open(modelFile)
     modelData = f.read()
     classifier = pickle.loads(modelData)
