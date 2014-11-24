@@ -55,3 +55,30 @@ class ModelBuilder():
     correct = (predictions == self.classes)
     #returns percent correctly classified
     return float(sum(correct)) / float(self.classes.shape[0])
+
+class Model():
+  # 0:SVM, 1:kNN, 2:NB, 3:RF
+  def __init__(self,modelFile,modelType):
+    self.setModel(modelFile,modelType)
+
+  # 0:SVM, 1:kNN, 2:NB, 3:RF
+  def setModel(self,modelFile,modelType):
+    f = open(modelFile)
+    modelData = f.read()
+    self.classifier = pickle.loads(modelData)
+    self.modelType = modelType
+
+  def classify(self,instance):
+    predictions = self.classifier.predict(instance)
+    return predictions[0]
+
+  def getScoreCorrect(self,instance):
+    score = None
+    #SVM scores are the signed distance from decision boundary, >0 ==> class 1, <0 ==> class 0
+    if self.modelType == 1:
+      score = self.classifier.decision_function(instance)
+      score = score[0]
+    else:
+      score = self.classifier.predict_proba(instance)
+      score = score[0][1]
+    return score
