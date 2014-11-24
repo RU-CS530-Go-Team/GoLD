@@ -27,7 +27,7 @@ class DiffLiberties(Feature):
         
         second_liberties = black_liberties - white_liberties
         
-        return first_liberties - second_liberties
+        return second_liberties - first_liberties
         
     def calculate_liberties(self, groups):
         ans_libs = 0

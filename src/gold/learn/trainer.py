@@ -6,6 +6,7 @@ Created on Nov 22, 2014
 from glob import glob
 import sys
 import os
+import time
 #import csv 
 from gold.extraneous.MoveTreeParser import MoveTreeParser
 from gold.models.board import Board, IllegalMove
@@ -55,8 +56,11 @@ class MoveTrainer():
     def get_vectors_from_file(self, f):
         #print(f)
         mtp = MoveTreeParser(f)
+        print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
         sn = mtp.getSolutionNodes()
         inc = mtp.getIncorrectNodes()
+        pt = mtp.problemType
+        isBTL = (pt==1 or pt==3)
         if not sn.isdisjoint(inc):
             print('NOT DISJOINT')
         paths = mtp.getAllPaths()
@@ -76,19 +80,24 @@ class MoveTrainer():
                 move = Board(start.x, start.y)
                 move.white_stones = [x for x in start.white_stones]
                 move.black_stones = [y for y in start.black_stones]
-                if move_x>move.x or move_y>move.y:
-                    print('({},{})!!'.format(move_x,move_y))
                 try:
                     move.place_stone(move_x, move_y, saysblack)
-                    if (parent, mid) not in movesConsidered:
+                    if (parent, mid) not in movesConsidered and isBTL == saysblack :
                         outcome = 0
                         if mid in sn:
                             outcome = 1
+                        elif mid in inc:
+                            outcome = 0
+                        else:
+                            raise Exception('Unknown outcome!')
                         features = fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features.append(outcome)
                         #print('{}'.format(features))
                         movesConsidered.add((parent, mid))
                         vectors.append(features)
+                        # Only train on the first wrong move
+                        if outcome==0:
+                            break;
                 except IllegalMove as e:
                     print('{}: ({},{})'.format(e, move_x, move_y))
                 parent = mid
@@ -96,6 +105,7 @@ class MoveTrainer():
         return vectors
     
     def train(self):
+        start = time.clock()
         for ldir in self.dirs:
             if os.path.isdir(ldir):
                 subpaths = ldir.split('\\')
@@ -103,7 +113,7 @@ class MoveTrainer():
                 newf = subpaths[-1]+'.csv'
                 print('writing to {}'.format(newf))
                 fout=open(newf, 'w') 
-                fout.write('CLR,ST_CNT,LIB,DFC,SOLUTION\n')
+                fout.write('ST_CNT,LIB,DFC,SOLUTION\n')
                 #csvwriter = csv.writer(fout)
                 for f in self.file_search(ldir):
                     try:
@@ -120,7 +130,7 @@ class MoveTrainer():
                         print('Unexpected Error: {}'.format(e))
                         subpaths = f.split('/')
                         newf = '/'.join(subpaths[:-2])+'/discard/'+subpaths[-1].split('\\')[-1]
-                        print('Move {} to {}'.format(f, newf))
+                        #print('Move {} to {}'.format(f, newf))
                         #raise
                 fout.close()
             else:
@@ -132,5 +142,8 @@ class MoveTrainer():
                 #ui.mainloop()
                 #mtp.printAllPaths()
                 print('=-=-===-=-=-===-=-=-===-=-=-===-=-=-===-=-=')
+            end = time.clock()
+            intvl = end - start
+            print('Feature extraction took %.03f seconds' %intvl)
 if __name__ == '__main__':
     MoveTrainer(sys.argv[1:]).train()
