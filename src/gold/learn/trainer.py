@@ -92,10 +92,10 @@ class MoveTrainer():
                         outcome = 0
                         #CHECK THIS LOGIC
                         if mid in sn:
-                            if (probtyp == 1 and movetyp) or (probtyp == 2 and not movetyp):
+                            if (probtyp == 1 and saysblack) or (probtyp == 2 and not saysblack):
                                 outcome = 1
                         else:
-                            if (probtyp == 2 and movetyp) or (probtyp == 1 and not movetyp):
+                            if (probtyp == 2 and saysblack) or (probtyp == 1 and not saysblack):
                                 outcome = 1
                         features = [probtyp, saysblack]
                         features = features + fe.extract_features(start, move, (move_x, move_y), saysblack)
