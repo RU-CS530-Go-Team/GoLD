@@ -1,5 +1,5 @@
 from array import array
- 
+
 class IllegalMove(Exception):
     def __init__(self, value):
         self.value = value
@@ -11,13 +11,13 @@ class Board:
     y = 0
     white_stones = None
     black_stones = None
-    
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.white_stones = []
         self.black_stones = []
-        
+
     def __str__(self):
         ans = ""
         for i in range(self.x):
@@ -30,7 +30,7 @@ class Board:
                     ans += "-"
             ans += "\n"
         return ans
-        
+
     def board_spaces(self):
         state = []
         for i in range(self.x):
@@ -44,14 +44,14 @@ class Board:
                     row.append('0')
             state.append(row)
         return state
-    
+
     def group_stones(self, isblack):
         if isblack:
             stones = [{x} for x in self.black_stones]
         else:
             stones = [{x} for x in self.white_stones]
         # union-find
-        
+
     def place_stone(self, x, y, isblack):
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
             raise IllegalMove("Out of the Bounds of the Go Board")
@@ -62,7 +62,7 @@ class Board:
         else:
             self.white_stones.append((x, y))
         self.update(isblack)
-    
+
     def update(self, isblack):
         if isblack:
             first = self.white_stones
@@ -95,11 +95,11 @@ class Board:
                             continue
                         elif not first_prime and (new_row, new_column) in first:
                             continue
-                        else: 
+                        else:
                             free_spaces.add((new_row, new_column))
                 completed_stones.extend(attached_stones)
                 liberties.extend([(x[0], x[1], len(free_spaces)) for x in attached_stones])
-            print liberties
+            #print liberties
             if first_prime:
                 first = [(x, y) for x, y, z in liberties if z != 0]
                 if isblack:
@@ -113,11 +113,11 @@ class Board:
                 else:
                     self.white_stones = second
 '''
- Implements union-find to group adjacent stones 
- of the same color into sets. 
+ Implements union-find to group adjacent stones
+ of the same color into sets.
 '''
 class StoneGrouper():
-    ''' Doesnt really need the board... could just have stones 
+    ''' Doesnt really need the board... could just have stones
     def __init__(self, board, isblack):
         self.board = board
         self.isblack = isblack
@@ -128,23 +128,23 @@ class StoneGrouper():
         self.group_stones()
     '''
 
-    ''' Doesnt really need the board... could just have stones  ''' 
+    ''' Doesnt really need the board... could just have stones  '''
     def __init__(self, stones):
         self.board = None
         self.stones = stones
         self.group_stones()
-            
+
     def find(self, element):
         for subset in self.groups:
             if element in subset:
                 return subset
         raise ValueError('{} not found'.format(element))
-    
+
     def union(self, set1, set2):
         i = self.groups.index(set1)
         self.groups[i] = set1.union(set2)
         self.groups.remove(set2)
-        
+
     def is_space_adjacent(self, spc1, spc2):
         x1 = spc1[0]
         y1 = spc1[1]
@@ -155,14 +155,14 @@ class StoneGrouper():
         if y1==y2:
             return abs(x2-x1)==1
         return False
-    
+
     def is_group_adjacent(self, set1, set2):
         for spc1 in set1:
             for spc2 in set2:
                 if self.is_space_adjacent(spc1, spc2):
                     return True
         return False
-    
+
     def group_stones(self):
         self.groups = [{x} for x in self.stones]
         for i in range(len(self.stones)):

@@ -6,7 +6,7 @@ Created on Nov 22, 2014
 from glob import glob
 import sys
 import os
-#import csv 
+#import csv
 from gold.extraneous.MoveTreeParser import MoveTreeParser
 from gold.models.board import Board, IllegalMove
 from gold.features.StoneCountFeature import StoneCountFeature
@@ -15,10 +15,10 @@ from gold.features.DistanceFromCenterFeature import DistanceFromCenterFeature
 from gold.features.ColorFeature import ColorFeature
 
 class FeatureExtractor():
-    
+
     def __init__(self):
         pass
-    
+
     def extract_features(self, start, move, movePosition, isblack):
         if( not isblack ):
             newstart = Board(start.x, start.y)
@@ -35,9 +35,9 @@ class FeatureExtractor():
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
         return [x1, x2, x3]
-        
+
 class MoveTrainer():
-    
+
     def __init__(self, dirs):
         self.dirs = dirs
 
@@ -51,12 +51,20 @@ class MoveTrainer():
             else:
                 files.append(f)
         return files
-    
+
     def get_vectors_from_file(self, f):
         #print(f)
         mtp = MoveTreeParser(f)
         sn = mtp.getSolutionNodes()
         inc = mtp.getIncorrectNodes()
+        probtyp = mtp.getProblemType()
+        if probtyp == 1 or probtyp == 3: #Black to live
+          probtyp = 1
+        elif probtyp == 2 or probtyp == 4: #White to kill
+          probtyp = 2
+        else: #Error should be thrown, but just in case it isn't
+          probtyp = 0
+
         if not sn.isdisjoint(inc):
             print('NOT DISJOINT')
         paths = mtp.getAllPaths()
@@ -84,7 +92,8 @@ class MoveTrainer():
                         outcome = 0
                         if mid in sn:
                             outcome = 1
-                        features = fe.extract_features(start, move, (move_x, move_y), saysblack)
+                        features = [probtyp, saysblack]
+                        features = features + fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features.append(outcome)
                         #print('{}'.format(features))
                         movesConsidered.add((parent, mid))
@@ -94,23 +103,33 @@ class MoveTrainer():
                 parent = mid
                 start = move
         return vectors
-    
+
     def train(self):
         for ldir in self.dirs:
             if os.path.isdir(ldir):
                 subpaths = ldir.split('\\')
                 #newf = '/'.join(subpaths[:-2])+'/'+subpaths[-1]+'.csv'
-                newf = subpaths[-1]+'.csv'
+                newf = subpaths[-1]+'featuresBtL.csv'
+                newf2 = subpaths[-1]+'featuresWtK.csv'
                 print('writing to {}'.format(newf))
-                fout=open(newf, 'w') 
-                fout.write('CLR,ST_CNT,LIB,DFC,SOLUTION\n')
+                print('writing to {}'.format(newf2))
+                fout=open(newf, 'w')
+                fout2=open(newf2, 'w')
+                fout.write('ST_CNT,LIB,DFC,SOLUTION\n') #Removed CLR label until color feature readded
+                fout2.write('ST_CNT,LIB,DFC,SOLUTION\n') #Removed CLR label until color feature readded
                 #csvwriter = csv.writer(fout)
                 for f in self.file_search(ldir):
                     try:
                         v = self.get_vectors_from_file(f)
                         for xv in v:
-                            fout.write(','.join([str(x) for x in xv]))
-                            fout.write('\n')
+                            probtyp = xv.pop(0)
+                            movetyp = xv.pop(0)
+                            if (probtyp == 1 and movetyp) or (probtyp == 2 and not movetyp):
+                                fout.write(','.join([str(x) for x in xv]))
+                                fout.write('\n')
+                            elif (probtyp == 1 and not movetyp) or (probtyp == 2 and movetyp):
+                                fout2.write(','.join([str(x) for x in xv]))
+                                fout2.write('\n')
                             #csvwriter.writerow(xv)
                         print('{} vectors in {}'.format(len(v), f))
                     except TypeError as te:
@@ -123,9 +142,10 @@ class MoveTrainer():
                         print('Move {} to {}'.format(f, newf))
                         #raise
                 fout.close()
+                fout2.close()
             else:
                 self.get_vectors_from_file(ldir)
-    
+
                 #ui = Launcher(400,400,50,mtp.start.x)
                 #ui.setBoard(mtp.start)
                 #ui.drawBoard()
