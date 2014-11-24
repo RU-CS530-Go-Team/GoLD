@@ -7,7 +7,6 @@ from glob import glob
 import sys
 import os
 import time
-#import csv 
 from gold.extraneous.MoveTreeParser import MoveTreeParser
 from gold.models.board import Board, IllegalMove
 from gold.features.StoneCountFeature import StoneCountFeature
@@ -16,11 +15,12 @@ from gold.features.DistanceFromCenterFeature import DistanceFromCenterFeature
 from gold.features.ColorFeature import ColorFeature
 
 class FeatureExtractor():
-    
+
     def __init__(self):
         pass
-    
+
     def extract_features(self, start, move, movePosition, isblack):
+        x0 = ColorFeature(start, move, movePosition, isblack).calculate_feature()
         if( not isblack ):
             newstart = Board(start.x, start.y)
             newstart.black_stones = start.white_stones
@@ -30,15 +30,13 @@ class FeatureExtractor():
             newmove.black_stones = move.white_stones
             newmove.white_stones = move.black_stones
             move = newmove
-            isblack = True
-        #x0 = ColorFeature(start, move, movePosition, isblack).calculate_feature()
         x1 = StoneCountFeature(start, move, movePosition, isblack).calculate_feature()
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
-        return [x1, x2, x3]
-        
+        return [x0, x1, x2, x3]
+
 class MoveTrainer():
-    
+
     def __init__(self, dirs):
         self.dirs = dirs
 
@@ -52,15 +50,21 @@ class MoveTrainer():
             else:
                 files.append(f)
         return files
-    
+
     def get_vectors_from_file(self, f):
         #print(f)
         mtp = MoveTreeParser(f)
         print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
         sn = mtp.getSolutionNodes()
         inc = mtp.getIncorrectNodes()
-        pt = mtp.problemType
-        isBTL = (pt==1 or pt==3)
+        probtyp = mtp.getProblemType()
+        if probtyp == 1 or probtyp == 3: #Black to live
+            probtyp = 1
+        elif probtyp == 2 or probtyp == 4: #White to kill
+            probtyp = 2
+        else: #Error should be thrown, but just in case it isn't
+            probtyp = 0
+        isBTL = (probtyp==1)
         if not sn.isdisjoint(inc):
             print('NOT DISJOINT')
         paths = mtp.getAllPaths()
@@ -82,45 +86,65 @@ class MoveTrainer():
                 move.black_stones = [y for y in start.black_stones]
                 try:
                     move.place_stone(move_x, move_y, saysblack)
-                    if (parent, mid) not in movesConsidered and isBTL == saysblack :
+                    if (parent, mid) not in movesConsidered: 
+                        features = [probtyp]
                         outcome = 0
-                        if mid in sn:
-                            outcome = 1
-                        elif mid in inc:
-                            outcome = 0
+                        if isBTL == saysblack:
+                            #CHECK THIS LOGIC
+                            if mid in sn:
+                                outcome = 1
+                            elif mid in inc:
+                                outcome = 0
+                            else:
+                                raise Exception('Unknown outcome!')
                         else:
-                            raise Exception('Unknown outcome!')
+                            ''' Assume only moves on incorrect path are correct
+                                for the "antagonist" '''
+                            if mid in inc:
+                                outcome = 1
+                            ''' Assume all moves for the "antagonist" are correct '''
+                            # outcome = 1
+                        features = features + fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features = fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features.append(outcome)
-                        #print('{}'.format(features))
                         movesConsidered.add((parent, mid))
                         vectors.append(features)
-                        # Only train on the first wrong move
-                        if outcome==0:
+                        # Only train on the first wrong move for the protagonist
+                        if outcome==0 and isBTL==saysblack:
                             break;
                 except IllegalMove as e:
                     print('{}: ({},{})'.format(e, move_x, move_y))
                 parent = mid
                 start = move
         return vectors
-    
+
     def train(self):
         start = time.clock()
         for ldir in self.dirs:
             if os.path.isdir(ldir):
                 subpaths = ldir.split('\\')
                 #newf = '/'.join(subpaths[:-2])+'/'+subpaths[-1]+'.csv'
-                newf = subpaths[-1]+'.csv'
+                newf = subpaths[-1]+'featuresBtL.csv'
+                newf2 = subpaths[-1]+'featuresWtK.csv'
                 print('writing to {}'.format(newf))
-                fout=open(newf, 'w') 
-                fout.write('ST_CNT,LIB,DFC,SOLUTION\n')
+                print('writing to {}'.format(newf2))
+                fout=open(newf, 'w')
+                fout2=open(newf2, 'w')
+                fout.write('ST_CNT,LIB,DFC,SOLUTION\n') #Removed CLR label until color feature readded
+                fout2.write('ST_CNT,LIB,DFC,SOLUTION\n') #Removed CLR label until color feature readded
                 #csvwriter = csv.writer(fout)
                 for f in self.file_search(ldir):
                     try:
                         v = self.get_vectors_from_file(f)
                         for xv in v:
-                            fout.write(','.join([str(x) for x in xv]))
-                            fout.write('\n')
+                            probtyp = xv.pop(0)
+                            movetyp = (xv.pop(0))==1
+                            if (probtyp == 1 and movetyp) or (probtyp == 2 and not movetyp):
+                                fout.write(','.join([str(x) for x in xv]))
+                                fout.write('\n')
+                            elif (probtyp == 1 and not movetyp) or (probtyp == 2 and movetyp):
+                                fout2.write(','.join([str(x) for x in xv]))
+                                fout2.write('\n')
                             #csvwriter.writerow(xv)
                         print('{} vectors in {}'.format(len(v), f))
                     except TypeError as te:
@@ -133,9 +157,10 @@ class MoveTrainer():
                         #print('Move {} to {}'.format(f, newf))
                         #raise
                 fout.close()
+                fout2.close()
             else:
                 self.get_vectors_from_file(ldir)
-    
+
                 #ui = Launcher(400,400,50,mtp.start.x)
                 #ui.setBoard(mtp.start)
                 #ui.drawBoard()

@@ -342,14 +342,12 @@ class MoveTreeParser():
     solutionNodes = self.getSolutionNodes()
     for node in solutionNodes:
       move = self.formatMove(self.getMove(node))
-      print move
       xList.append(move['x'])
       yList.append(move['y'])
 
     incorrectNodes = self.getIncorrectNodes()
     for node in incorrectNodes:
       move = self.formatMove(self.getMove(node))
-      print move
       xList.append(move['x'])
       yList.append(move['y'])
 
