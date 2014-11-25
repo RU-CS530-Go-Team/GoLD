@@ -70,7 +70,7 @@ def determineLife(board, color):
             break
         modified = False
         for region in groups_by_region:
-            cmodified = False   
+            cmodified = False    
             current_groups = groups_by_region[region]
             for each_group in current_groups:
                 for each_stone in each_group:
@@ -78,6 +78,7 @@ def determineLife(board, color):
                         modified = True
                         cmodified = True
                         del groups_by_region[region]
+                        enclosed_regions.remove(region)
                         break
                 if cmodified: break
         if not modified: break
