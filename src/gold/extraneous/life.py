@@ -26,6 +26,7 @@ def determineLife(board, color):
     regions = {}
     for x_i, x in enumerate(fill_board):
         for y_i, y in enumerate(x):
+            if y == 0 or y == 1: continue
             try:
                 regions[y].append((x_i, y_i))
             except:
