@@ -31,8 +31,15 @@ def determineLife(board, color):
             except:
                 regions[y] = [(x_i, y_i)]
                 
+    #remove all places taken up by the other color of stones
+    for current_region in regions:
+        for check in other:
+            if check in regions[current_region]:
+                regions[current_region].remove(other)
+                
     #Determine which are enclosed by whatever color we're working on
     enclosed_regions = []
+    groups_by_region = {}
     for current_group in connected_groups:
         max_X = max([x[0] for x in current_group]) +1
         max_Y = max([x[1] for x in current_group]) +1
@@ -40,14 +47,42 @@ def determineLife(board, color):
         min_Y = min([x[1] for x in current_group]) -1
         
         for current_region in regions:
-            if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in current_region):
-                enclosed_regions.append(current_region)
+            if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in regions[current_region]):
+                enclosed_regions.append(regions[current_region])
+                try:
+                    groups_by_region[current_region].append(current_group)
+                except:
+                    groups_by_region[current_region] = [current_group]
         
-    #Removing the places taken up by the other color of stones stones
-    for current_region in enclosed_regions:
-        for check in other:
-            if check in current_region:
-                current_region.remove(other)
+    #Starting Benson's Algorithm
+    initial_groups = sorted(initial_groups)
+    while(True):
+        modified = False
+        for chain in initial_groups:
+            num_vital = 0
+            for region in enclosed_regions:
+                if vital(chain, board, region):
+                    num_vital += 1
+            if num_vital < 2:
+                initial_groups.remove(chain)
+                modified = True
+        if not modified:
+            break
+        modified = False
+        for region in groups_by_region:
+            cmodified = False   
+            current_groups = groups_by_region[region]
+            for each_group in current_groups:
+                for each_stone in each_group:
+                    if any(each_stone not in looking_at_group for looking_at_group in initial_groups):
+                        modified = True
+                        cmodified = True
+                        del groups_by_region[region]
+                        break
+                if cmodified: break
+        if not modified: break
+                
+    return initial_groups
     
     
         
