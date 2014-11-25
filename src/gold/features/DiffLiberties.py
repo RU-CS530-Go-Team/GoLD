@@ -36,7 +36,7 @@ class DiffLiberties(Feature):
             for current_x, current_y in group:
                 moves = [(current_x - 1, current_y), (current_x + 1, current_y), (current_x, current_y - 1), (current_x, current_y + 1)]
                 for cm in moves:
-                    if cm[0] < 0 or cm[0] > self.start.x or cm[1] < 0 or cm[1] > self.start.y:
+                    if cm[0] < 0 or cm[0] >= self.start.x or cm[1] < 0 or cm[1] >= self.start.y:
                         continue
                     elif not (cm in self.start.black_stones or cm in self.start.white_stones):
                         current_liberties.add(cm)
