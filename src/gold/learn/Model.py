@@ -23,14 +23,6 @@ class ModelBuilder():
       else:
         self.instances = np.concatenate((self.instances, instancesTemp), axis=0)
         self.classes = np.concatenate((self.classes, classesTemp), axis=0)
-      print self.instances.size
-  def buildModelSVM(self,outputFile):
-    classifier = svm.LinearSVC()
-    classifier.fit(self.instances, self.classes)
-    modelData = pickle.dumps(classifier)
-    f = open(outputFile,"w")
-    f.write(modelData)
-    f.close()
 
   def buildScaler(self,outputFile):
     #Scale to zero mean, unit standard deviation
@@ -47,6 +39,14 @@ class ModelBuilder():
 
   def scaleData():
     self.instances = self.scaler.transform(self.instances)
+
+  def buildModelSVM(self,outputFile):
+    classifier = svm.LinearSVC()
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
 
   def buildModelNeighbors(self,outputFile,numNeighbors):
     classifier = neighbors.KNeighborsClassifier(numNeighbors)
