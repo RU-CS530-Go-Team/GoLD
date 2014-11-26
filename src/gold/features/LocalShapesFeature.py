@@ -35,8 +35,6 @@ class LocalShapesFeature(Feature):
 
     features = list(features2)+list(featuresDiff)
 
-    print len(features)
-
     return features
 
   def convert_board(self,boardInput,blankVal):
