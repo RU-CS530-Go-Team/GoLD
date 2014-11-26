@@ -32,14 +32,21 @@ class ModelBuilder():
     f.write(modelData)
     f.close()
 
-  def scaleData(self,outputFile):
+  def buildScaler(self,outputFile):
     #Scale to zero mean, unit standard deviation
-    scaler = preprocessing.StandardScaler().fit(self.instances)
-    scaler.transform(self.instances)
+    self.scaler = preprocessing.StandardScaler().fit(self.instances)
     scalerData = pickle.dumps(scaler)
     f = open(outputFile,"w")
     f.write(scalerData)
     f.close()
+
+  def setScaler(self,scalerFile):
+    f = open(scalerFile)
+    scalerData = f.read()
+    self.scaler = pickle.loads(scalerData)
+
+  def scaleData():
+    self.instances = self.scaler.transform(self.instances)
 
   def buildModelNeighbors(self,outputFile,numNeighbors):
     classifier = neighbors.KNeighborsClassifier(numNeighbors)
