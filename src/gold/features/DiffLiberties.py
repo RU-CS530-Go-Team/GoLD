@@ -11,18 +11,18 @@ class DiffLiberties(Feature):
     classdocs
     '''
     def calculate_feature(self):
-        black_groups = StoneGrouper(self.start.black_stones).groups
+        black_groups = [list(x) for x in StoneGrouper(self.start.black_stones).groups]
         black_liberties = self.calculate_liberties(black_groups)
         
-        white_groups = StoneGrouper(self.start.white_stones).groups
+        white_groups = [list(x) for x in StoneGrouper(self.start.white_stones).groups]
         white_liberties = self.calculate_liberties(white_groups)
         
         first_liberties = black_liberties - white_liberties
         
-        black_groups = StoneGrouper(self.move.black_stones).groups
+        black_groups = [list(x) for x in StoneGrouper(self.move.black_stones).groups]
         black_liberties = self.calculate_liberties(black_groups)
         
-        white_groups = StoneGrouper(self.move.white_stones).groups
+        white_groups = [list(x) for x in StoneGrouper(self.move.white_stones).groups]
         white_liberties = self.calculate_liberties(white_groups)
         
         second_liberties = black_liberties - white_liberties
