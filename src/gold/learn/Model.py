@@ -35,6 +35,7 @@ class ModelBuilder():
   def setScaler(self,scalerFile):
     f = open(scalerFile)
     scalerData = f.read()
+    f.close()
     self.scaler = pickle.loads(scalerData)
 
   def scaleData():
@@ -90,12 +91,14 @@ class Model():
   def setModel(self,modelFile,modelType):
     f = open(modelFile)
     modelData = f.read()
+    f.close()
     self.classifier = pickle.loads(modelData)
     self.modelType = modelType
 
   def setScaler(self,scalerFile):
     f = open(scalerFile)
     scalerData = f.read()
+    f.close()
     self.scaler = pickle.loads(scalerData)
 
   def scale(self,instance):

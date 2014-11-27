@@ -13,7 +13,7 @@ from gold.features.StoneCountFeature import StoneCountFeature
 from gold.features.DiffLiberties import DiffLiberties
 from gold.features.DistanceFromCenterFeature import DistanceFromCenterFeature
 from gold.features.ColorFeature import ColorFeature
-#from gold.features.LocalShapesFeature import LocalShapesFeature
+from gold.features.LocalShapesFeature import LocalShapesFeature
 
 class FeatureExtractor():
 
@@ -34,8 +34,8 @@ class FeatureExtractor():
         x1 = StoneCountFeature(start, move, movePosition, isblack).calculate_feature()
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
-        #x4 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature()
-        return [x0, x1, x2, x3]
+        x4 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature()
+        return [x0, x1, x2, x3] + x4
         #return [x0] + x4
 
 class MoveTrainer():

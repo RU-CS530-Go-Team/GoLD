@@ -1,14 +1,12 @@
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn import preprocessing
 import numpy as np
-import pickle
 
 class FeatureSelector():
-  def __init__(self,inputFiles,scaleDataFlag,numFeatures):
+  def __init__(self,inputFiles,scaleDataFlag):
     self.setData(inputFiles)
     if scaleDataFlag:
       self.scaleData()
-    return self.selectFeatures(numFeatures)
 
   def setData(self,inputFiles):
     self.instances = np.array([])
@@ -30,6 +28,10 @@ class FeatureSelector():
     self.instances = self.scaler.transform(self.instances)
 
   def selectFeatures(self,numFeatures):
+    return self.selectFeaturesFromSubset(list(range(self.instances.shape[1])),numFeatures)
+
+  def selectFeaturesFromSubset(self,subset,numFeatures):
     clf = ExtraTreesClassifier()
-    clf.fit(self.instances, self.classes)
+    clf.fit(self.instances[:,subset], self.classes)
+    temp = clf.feature_importances_
     return np.argsort(-clf.feature_importances_)[:numFeatures]
