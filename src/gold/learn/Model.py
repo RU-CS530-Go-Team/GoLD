@@ -41,8 +41,8 @@ class ModelBuilder():
   def scaleData():
     self.instances = self.scaler.transform(self.instances)
 
-  def buildModelSVM(self,outputFile):
-    classifier = svm.LinearSVC()
+  def buildModelSVM(self,outputFile,weights=None):
+    classifier = svm.LinearSVC(class_weight=weights)
     classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
