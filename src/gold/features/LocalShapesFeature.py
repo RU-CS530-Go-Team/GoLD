@@ -18,15 +18,12 @@ class LocalShapesSelector():
     numShapes = numDimensions/2
     featureSet1b = featureSel.selectFeaturesFromSubset(list(range(numShapes)),numBaseFeatures)
     featureSet2b = featureSel.selectFeaturesFromSubset(list(range(numShapes,numDimensions)),numBaseFeatures)
-    featureSetb = list(set(featureSet1b + featureSet2b))
-
+    featureSetb = list(set(list(featureSet1b) + list(featureSet2b)))
     featureSel = FeatureSelector(dataFileListWtK,False)
     featureSet1w = featureSel.selectFeaturesFromSubset(list(range(numShapes)),numBaseFeatures)
     featureSet2w = featureSel.selectFeaturesFromSubset(list(range(numShapes,numDimensions)),numBaseFeatures)
-    featureSetw = list(set(featureSet1w + featureSet2w))
-
-    featureSet = list(set(featureSetb + featureSetw))
-
+    featureSetw = list(set(list(featureSet1w) + list(featureSet2w)))
+    featureSet = list(set(list(featureSetb) + list(featureSetw)))
     self.generate_templates(featureSet,outputFile1,outputFile2)
 
   def generate_templates(self,featureSet,outputFile1,outputFile2):
