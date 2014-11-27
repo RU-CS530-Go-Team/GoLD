@@ -164,7 +164,7 @@ class LocalShapesSelector():
                   shape2[2,1] = n
                 if shapeIndex in featureSet:
                   shapeSet1.append(np.copy(shape1))
-                  shapeSet2.append(np.copy(shape1))
+                  shapeSet2.append(np.copy(shape2))
                 shapeIndex = shapeIndex + 1
     shapeData = pickle.dumps(shapeSet1)
     f = open(outputFile1,"w")
