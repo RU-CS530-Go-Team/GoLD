@@ -129,8 +129,8 @@ class StoneGrouper():
     '''
 
     ''' Doesnt really need the board... could just have stones  '''
-    def __init__(self, stones):
-        self.board = None
+    def __init__(self, stones, board=None):
+        self.board = board
         self.stones = stones
         self.group_stones()
 
@@ -154,6 +154,10 @@ class StoneGrouper():
             return abs(y2-y1)==1
         if y1==y2:
             return abs(x2-x1)==1
+        if self.board is not None: #checks for diagonal connections, only does so if the board is in.
+            if abs(x2 - x1) == 1 and abs(y2 - y1) == 1:
+                group = self.board.black_stones if (x1, y1) in self.board.white_stones else self.board.white_stones
+                return (x1, y2) not in group or (x2, y1) not in group
         return False
 
     def is_group_adjacent(self, set1, set2):
