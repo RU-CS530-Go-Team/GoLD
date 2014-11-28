@@ -2,21 +2,47 @@ from sklearn import svm
 from sklearn import neighbors
 from sklearn import ensemble
 from sklearn import naive_bayes
+from sklearn import preprocessing
 import numpy as np
 import pickle
 
 class ModelBuilder():
-  def __init__(self,inputFile):
-    self.setData(inputFile)
+  def __init__(self,inputFiles):
+    self.setData(inputFiles)
 
-  def setData(self,inputFile):
-    self.dataFile = inputFile
-    self.data = np.loadtxt(open(self.dataFile,"rb"),delimiter=",",skiprows=1)
-    self.instances = self.data[:,:self.data.shape[1]-1]
-    self.classes = self.data[:,self.data.shape[1]-1]
+  def setData(self,inputFiles):
+    self.instances = np.array([])
+    self.classes = np.array([])
+    for dataFile in inputFiles:
+      data = np.loadtxt(open(dataFile,"rb"),delimiter=",",skiprows=1)
+      instancesTemp = data[:,:data.shape[1]-1]
+      classesTemp = data[:,data.shape[1]-1]
+      if self.instances.size == 0:
+        self.instances = instancesTemp
+        self.classes = classesTemp
+      else:
+        self.instances = np.concatenate((self.instances, instancesTemp), axis=0)
+        self.classes = np.concatenate((self.classes, classesTemp), axis=0)
 
-  def buildModelSVM(self,outputFile):
-    classifier = svm.LinearSVC()
+  def buildScaler(self,outputFile):
+    #Scale to zero mean, unit standard deviation
+    self.scaler = preprocessing.StandardScaler().fit(self.instances)
+    scalerData = pickle.dumps(scaler)
+    f = open(outputFile,"w")
+    f.write(scalerData)
+    f.close()
+
+  def setScaler(self,scalerFile):
+    f = open(scalerFile)
+    scalerData = f.read()
+    f.close()
+    self.scaler = pickle.loads(scalerData)
+
+  def scaleData():
+    self.instances = self.scaler.transform(self.instances)
+
+  def buildModelSVM(self,outputFile,weights=None):
+    classifier = svm.LinearSVC(class_weight=weights)
     classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
@@ -65,8 +91,18 @@ class Model():
   def setModel(self,modelFile,modelType):
     f = open(modelFile)
     modelData = f.read()
+    f.close()
     self.classifier = pickle.loads(modelData)
     self.modelType = modelType
+
+  def setScaler(self,scalerFile):
+    f = open(scalerFile)
+    scalerData = f.read()
+    f.close()
+    self.scaler = pickle.loads(scalerData)
+
+  def scale(self,instance):
+    return self.scaler.transform(instance)
 
   def classify(self,instance):
     predictions = self.classifier.predict(instance)
@@ -75,7 +111,7 @@ class Model():
   def getScoreCorrect(self,instance):
     score = None
     #SVM scores are the signed distance from decision boundary, >0 ==> class 1, <0 ==> class 0
-    if self.modelType == 1:
+    if self.modelType == 0:
       score = self.classifier.decision_function(instance)
       score = score[0]
     else:

@@ -13,6 +13,7 @@ from gold.features.StoneCountFeature import StoneCountFeature
 from gold.features.DiffLiberties import DiffLiberties
 from gold.features.DistanceFromCenterFeature import DistanceFromCenterFeature
 from gold.features.ColorFeature import ColorFeature
+from gold.features.LocalShapesFeature import LocalShapesFeature
 
 class FeatureExtractor():
 
@@ -33,7 +34,9 @@ class FeatureExtractor():
         x1 = StoneCountFeature(start, move, movePosition, isblack).calculate_feature()
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
-        return [x0, x1, x2, x3]
+        x4 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature()
+        return [x0, x1, x2, x3] + x4
+        #return [x0] + x4
 
 class MoveTrainer():
 
@@ -86,7 +89,7 @@ class MoveTrainer():
                 move.black_stones = [y for y in start.black_stones]
                 try:
                     move.place_stone(move_x, move_y, saysblack)
-                    if (parent, mid) not in movesConsidered: 
+                    if (parent, mid) not in movesConsidered:
                         features = [probtyp]
                         outcome = 0
                         if isBTL == saysblack:
@@ -105,7 +108,7 @@ class MoveTrainer():
                             ''' Assume all moves for the "antagonist" are correct '''
                             # outcome = 1
                         features = features + fe.extract_features(start, move, (move_x, move_y), saysblack)
-                        features = fe.extract_features(start, move, (move_x, move_y), saysblack)
+                        #features = fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features.append(outcome)
                         movesConsidered.add((parent, mid))
                         vectors.append(features)

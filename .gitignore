@@ -1,2 +1,1 @@
-src/gold/extraneous/games/
-src/gold/extraneous/parseBoardExample.py
+*.pyc
