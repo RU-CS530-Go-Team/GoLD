@@ -6,6 +6,7 @@ class IllegalMove(Exception):
     def __str__(self):
         return repr(self.value)
 
+MAX_MOVE_HISTORY = 5
 class Board:
     x = 0
     y = 0
@@ -17,7 +18,8 @@ class Board:
         self.y = y
         self.white_stones = []
         self.black_stones = []
-
+        self.prior_moves = []
+        
     def __str__(self):
         ans = ""
         for i in range(self.x):
@@ -30,20 +32,13 @@ class Board:
                     ans += "-"
             ans += "\n"
         return ans
-
-    def board_spaces(self):
-        state = []
-        for i in range(self.x):
-            row = array('c')
-            for j in range(self.y):
-                if (i,j) in self.white_stones:
-                    row.append('w')
-                elif (i,j) in self.black_stones:
-                    row.append('b')
-                else:
-                    row.append('0')
-            state.append(row)
-        return state
+    
+    def clone(self):
+        new = Board(self.x, self.y)
+        new.white_stones = [x for x in self.white_stones]
+        new.black_stones = [x for x in self.black_stones]
+        new.prior_moves = [x for x in self.prior_moves]
+        return new
 
     def group_stones(self, isblack):
         if isblack:
@@ -52,9 +47,23 @@ class Board:
             stones = [{x} for x in self.white_stones]
         # union-find
 
+    def is_move_repeated(self, x, y, isblack):
+        for [white, black, space, moveisblack] in self.prior_moves:
+            cw = set(w for w in self.white_stones)
+            cb = set(b for b in self.black_stones)
+            if space==(x,y) and moveisblack==isblack and cw==white and cb==black:
+                return True
+        return False
+    
     def place_stone(self, x, y, isblack):
+        if self.is_move_repeated(x, y, isblack):
+            raise IllegalMove("Ko")
+        transition = [set(z for z in self.white_stones), set(q for q in self.black_stones), (x,y), isblack]
+        self.prior_moves.append(transition)
+        if len(self.prior_moves)>=MAX_MOVE_HISTORY:
+            self.prior_moves = self.prior_moves[1:]
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
-            raise IllegalMove("Out of the Bounds of the Go Board")
+            raise IllegalMove("({},{}) is Out of the Bounds of the Go Board".format(x,y))
         elif (x, y) in self.white_stones or (x, y) in self.black_stones:
             raise IllegalMove("There is already a stone there")
         elif isblack:

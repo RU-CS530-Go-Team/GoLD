@@ -27,7 +27,7 @@ class ModelBuilder():
   def buildScaler(self,outputFile):
     #Scale to zero mean, unit standard deviation
     self.scaler = preprocessing.StandardScaler().fit(self.instances)
-    scalerData = pickle.dumps(scaler)
+    scalerData = pickle.dumps(self.scaler)
     f = open(outputFile,"w")
     f.write(scalerData)
     f.close()
@@ -38,7 +38,7 @@ class ModelBuilder():
     f.close()
     self.scaler = pickle.loads(scalerData)
 
-  def scaleData():
+  def scaleData(self):
     self.instances = self.scaler.transform(self.instances)
 
   def buildModelSVM(self,outputFile,weights=None):

@@ -52,8 +52,8 @@ class Launcher:
 
     def goForWhite(self, pi, pj):
         tree = MinMaxTree(self.board, False, True, 0, 0.0, 'b({},{})'.format(pi,pj))
-        [i, j] = tree.decideNextMove()
-        self.board.place_stone(i, j, False)
+        bestMove = tree.decideNextMove()
+        self.board.place_stone(bestMove.i, bestMove.j, False)
         #print(self.board)
         self.drawBoard()
 
