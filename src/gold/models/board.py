@@ -6,7 +6,7 @@ class IllegalMove(Exception):
     def __str__(self):
         return repr(self.value)
 
-MAX_MOVE_HISTORY = 5
+MAX_MOVE_HISTORY = 2
 class Board:
     x = 0
     y = 0
@@ -47,29 +47,42 @@ class Board:
             stones = [{x} for x in self.white_stones]
         # union-find
 
-    def is_move_repeated(self, x, y, isblack):
-        for [white, black, space, moveisblack] in self.prior_moves:
-            cw = set(w for w in self.white_stones)
-            cb = set(b for b in self.black_stones)
-            if space==(x,y) and moveisblack==isblack and cw==white and cb==black:
-                return True
+    def is_ko(self, x, y, isblack):
+        if len(self.prior_moves) < 2:
+            return False
+        if not (self.prior_moves[0][1] and self.prior_moves[1][1]):
+            return False
+        if not ((self.prior_moves[0][1][2] == isblack) and (self.prior_moves[0][1][2] == isblack)):
+            return False
+        if not alone(x, y, isblack):
+            return False
+        if (x,y) == self.prior_moves[0][0]:
+            return True
         return False
-    
+        
+    def alone(self, x, y, isblack):
+        moves = [(x + 1, y), (x -1, y), (x, y + 1), (x, y - 1)]
+        stones = self.black_stones if isblack else self.white_stones
+        for cm in moves:
+            if cm[0] < 0 or cm[0] >= self.x or cm[1] < 0 or cm[1] >= self.y:
+                continue
+            if cm in stones: return False
+        return True
+       
     def place_stone(self, x, y, isblack):
-        if self.is_move_repeated(x, y, isblack):
-            raise IllegalMove("Ko")
-        transition = [set(z for z in self.white_stones), set(q for q in self.black_stones), (x,y), isblack]
-        self.prior_moves.append(transition)
-        if len(self.prior_moves)>=MAX_MOVE_HISTORY:
-            self.prior_moves = self.prior_moves[1:]
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
             raise IllegalMove("({},{}) is Out of the Bounds of the Go Board".format(x,y))
         elif (x, y) in self.white_stones or (x, y) in self.black_stones:
             raise IllegalMove("There is already a stone there")
+        elif is_ko(x, y, isblack):
+            raise IllegalMove("Ko")
         elif isblack:
             self.black_stones.append((x, y))
         else:
             self.white_stones.append((x, y))
+        self.prior_moves.append(((x, y), alone(x, y, isblack), isblack))
+        if len(self.prior_moves)>=MAX_MOVE_HISTORY:
+            self.prior_moves = self.prior_moves[1:]
         self.update(isblack)
 
     def update(self, isblack):
