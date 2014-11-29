@@ -70,6 +70,7 @@ class Board:
         return True
        
     def place_stone(self, x, y, isblack):
+        old = (self.black_stones, self.white_stones, self.prior_moves)
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
             raise IllegalMove("({},{}) is Out of the Bounds of the Go Board".format(x,y))
         elif (x, y) in self.white_stones or (x, y) in self.black_stones:
@@ -84,6 +85,10 @@ class Board:
         if len(self.prior_moves)>=MAX_MOVE_HISTORY:
             self.prior_moves = self.prior_moves[1:]
         self.update(isblack)
+        stones = self.black_stones if isblack else self.white_stones
+        if (x, y) not in stones:
+            self.black_stones, self.white_stones, self.prior_moves = old
+            raise IllegalMove("Suicide is not allowed")
 
     def update(self, isblack):
         if isblack:
