@@ -3,6 +3,7 @@ from sklearn import neighbors
 from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import preprocessing
+from sklearn import decomposition
 import numpy as np
 import pickle
 
@@ -32,6 +33,19 @@ class ModelBuilder():
     f.write(scalerData)
     f.close()
 
+  def buildDimensionReducer(self,outputFile,whitenFlag):
+    self.pca = decomposition.PCA(n_components='mle',whiten=whitenFlag).fit(self.instances)
+    pcaData = pickle.dumps(self.pca)
+    f = open(outputFile,"w")
+    f.write(pcaData)
+    f.close()
+
+  def setDimensionReducer(self,pcaFile):
+    f = open(pcaFile)
+    pcaData = f.read()
+    f.close()
+    self.pca = pickle.loads(pcaData)
+
   def setScaler(self,scalerFile):
     f = open(scalerFile)
     scalerData = f.read()
@@ -40,6 +54,9 @@ class ModelBuilder():
 
   def scaleData(self):
     self.instances = self.scaler.transform(self.instances)
+
+  def reduceDimensions(self):
+    self.instances = self.pca.transform(self.instances)
 
   def buildModelSVM(self,outputFile,weights=None):
     classifier = svm.LinearSVC(class_weight=weights)
@@ -103,6 +120,15 @@ class Model():
 
   def scale(self,instance):
     return self.scaler.transform(instance)
+
+  def setDimensionReducer(self,pcaFile):
+    f = open(pcaFile)
+    pcaData = f.read()
+    f.close()
+    self.pca = pickle.loads(pcaData)
+
+  def reduceDimensions(self):
+    self.instances = self.pca.transform(self.instances)
 
   def classify(self,instance):
     predictions = self.classifier.predict(instance)

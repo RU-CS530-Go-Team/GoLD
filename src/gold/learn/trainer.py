@@ -13,7 +13,10 @@ from gold.features.StoneCountFeature import StoneCountFeature
 from gold.features.DiffLiberties import DiffLiberties
 from gold.features.DistanceFromCenterFeature import DistanceFromCenterFeature
 from gold.features.ColorFeature import ColorFeature
+from gold.features.numberLiveGroups import numberLiveGroups
 from gold.features.LocalShapesFeature import LocalShapesFeature
+from gold.features.PatchExtractor import PatchExtractor
+from gold.features.SparseDictionaryFeature import SparseDictionaryFeature
 
 class FeatureExtractor():
 
@@ -34,9 +37,23 @@ class FeatureExtractor():
         x1 = StoneCountFeature(start, move, movePosition, isblack).calculate_feature()
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
-        x4 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature()
-        return [x0, x1, x2, x3] + x4
-        #return [x0] + x4
+        x4 = numberLiveGroups(start, move, movePosition, isblack).calculate_feature()
+        x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature()
+
+        '''x6 = PatchExtractor(start, move, movePosition, isblack).calculate_feature()
+
+        for row in x6:
+          fout=open('extraneous/games/patches.csv', 'a')
+          fout.write(','.join([str(x) for x in row]))
+          fout.write('\n')
+          fout.close()'''
+
+        #x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature()
+
+        #return x6
+        return [x0, x1, x2, x3, x4, x5]
+        #return [x0] + x5
+        #return 0
 
 class MoveTrainer():
 
