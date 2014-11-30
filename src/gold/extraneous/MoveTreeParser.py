@@ -39,6 +39,8 @@ class MoveTreeParser():
 
     if (firstBlackMove > firstWhiteMove):
       self.blackFirst = False
+    else:
+      self.blackFirst = True
     position = 0
 
     if self.blackFirst:
@@ -174,6 +176,18 @@ class MoveTreeParser():
       paths.append(currentPath)
     return paths
 
+  def getSolutionPaths(self):
+    paths = []
+    for node in self.solutionStates:
+      currentPath = []
+      parentNode = self.parent[node]
+      currentPath.append(node)
+      while parentNode != 0:
+        currentPath.append(parentNode)
+        parentNode = self.parent[parentNode]
+      currentPath.reverse()
+      paths.append(currentPath)
+    return paths
   def printAllPaths(self):
     paths = self.getAllPaths()
     for path in paths:
@@ -186,6 +200,10 @@ class MoveTreeParser():
 
   def isColorFlipped(self):
     return self.flipColors
+
+  def getProblemTypeDesc(self):
+    descArr = ['No Type', 'Black to Live', 'Black to Kill', 'White to Live', 'White to Kill']
+    return descArr[self.problemType]
 
   def computeProblemType(self,gameData,firstMovePosition):
     minIndex = firstMovePosition
@@ -396,6 +414,10 @@ class MoveTreeParser():
         y = ord(currentChar) - ord('a') - self.boardDimensions['yMin']
         currentChar = gameData[i + counter + 4]
         x = ord(currentChar) - ord('a') - self.boardDimensions['xMin']
-        currentBoard.place_stone(x,y,isBlack)
+        if isBlack:
+            currentBoard.black_stones.append((x,y))
+        else:
+            currentBoard.white_stones.append((x,y))
+        #currentBoard.place_stone(x,y,isBlack)
         counter += 4
     return currentBoard
