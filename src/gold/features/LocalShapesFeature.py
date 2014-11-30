@@ -8,7 +8,15 @@ from gold.models.board import Board
 import numpy as np
 from scipy import signal
 from gold.learn.FeatureSelector import FeatureSelector
+from gold.learn.Model import ModelBuilder
+from gold.learn.Model import Model
 import pickle
+
+class LocalShapeModelGenerator():
+
+  def __init__(self,dataFileList,outputFile):
+    temp = ModelBuilder(dataFileList)
+    temp.buildModelSVM(outputFile)
 
 class LocalShapesSelector():
 
@@ -205,7 +213,11 @@ class LocalShapesFeature(Feature):
 
     features = list(features2)+list(featuresDiff)
 
-    return features
+    #return features
+
+    model = Model("features/localShapeModel.txt",0)
+
+    return model.getScoreCorrect(features)
 
   def set_shape_templates(self,shapeFile1,shapeFile2):
     f = open(shapeFile1)
