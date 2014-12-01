@@ -107,9 +107,7 @@ class MoveTreeParser():
       elif currentChar == "C":
         finalSquareBracketPosition = gameData.find(']',position-1)
         if gameData.find('RIGHT',position-1,finalSquareBracketPosition) != -1:
-          if len(currentMoveSet)<5:
-            print('No move to comment on')
-          else:
+          if len(currentMoveSet)>=5:
             currentMoveSet = currentMoveSet[0:5]
             maxMoveID += 1
             self.moveID[maxMoveID] = currentMoveSet

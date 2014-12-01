@@ -38,7 +38,7 @@ class FeatureExtractor():
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
         x4 = numberLiveGroups(start, move, movePosition, isblack).calculate_feature()
-        x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature(dataDir="c:/users/jblackmore/documents/development/rutgers/workspace/GoLD/src/gold/features/")
+        x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature(dataDir="../features/")
 
         '''patchEx = PatchExtractor(start, move, movePosition, isblack)
         patchEx.setPatchSize(6)
@@ -50,7 +50,7 @@ class FeatureExtractor():
           fout.write('\n')
           fout.close()'''
 
-        x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature(dataDir="c:/users/jblackmore/documents/development/rutgers/workspace/GoLD/src/gold/features/")
+        x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature(dataDir="../features/")
 
         #return x6
         #return [x0, x1, x2, x3, x4, x5]
