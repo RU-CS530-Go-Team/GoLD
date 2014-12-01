@@ -7,7 +7,7 @@ from glob import glob
 import sys
 import os
 import time
-from gold.extraneous.MoveTreeParser import MoveTreeParser
+from gold.extraneous.MoveTreeParser import MoveTreeParser, UnspecifiedProblemType
 from gold.models.board import Board, IllegalMove
 from gold.features.StoneCountFeature import StoneCountFeature
 from gold.features.DiffLiberties import DiffLiberties
@@ -38,7 +38,7 @@ class FeatureExtractor():
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
         x4 = numberLiveGroups(start, move, movePosition, isblack).calculate_feature()
-        x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature()
+        x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature(dataDir="c:/users/jblackmore/documents/development/rutgers/workspace/GoLD/src/gold/features/")
 
         '''patchEx = PatchExtractor(start, move, movePosition, isblack)
         patchEx.setPatchSize(6)
@@ -50,11 +50,11 @@ class FeatureExtractor():
           fout.write('\n')
           fout.close()'''
 
-        x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature()
+        x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature(dataDir="c:/users/jblackmore/documents/development/rutgers/workspace/GoLD/src/gold/features/")
 
         #return x6
         #return [x0, x1, x2, x3, x4, x5]
-        return [x0, x1, x2, x3, x4] + x5 + x6
+        return [x0, x1, x2, x3, x4,x5] + x6
         #return [x0, x1, x2, x3, x4] + x6
         #return [x0] + x5
         #return [x0] + x6
@@ -72,14 +72,16 @@ class MoveTrainer():
             if os.path.isdir(f):
                 for sf in self.file_search(f):
                     files.append(sf)
-            else:
+            elif f[-3:]=='sgf':
                 files.append(f)
+            else:
+                print('Ignoring unrecognized file {}'.format(f.split('/')[-1]))
         return files
 
     def get_vectors_from_file(self, f):
         #print(f)
         mtp = MoveTreeParser(f)
-        print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
+        #print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
         sn = mtp.getSolutionNodes()
         inc = mtp.getIncorrectNodes()
         probtyp = mtp.getProblemType()
@@ -171,27 +173,20 @@ class MoveTrainer():
                                 fout2.write(','.join([str(x) for x in xv]))
                                 fout2.write('\n')
                             #csvwriter.writerow(xv)
-                        print('{} vectors in {}'.format(len(v), f))
+                        print('{} vectors in {}'.format(len(v), f.split('/')[-1]))
                     except TypeError as te:
                         print(te)
-                    except Exception as e:
-                        #print('Unexpected Error: {}'.format(sys.exc_info()[0]))
-                        print('Unexpected Error: {}'.format(e))
-                        subpaths = f.split('/')
-                        newf = '/'.join(subpaths[:-2])+'/discard/'+subpaths[-1].split('\\')[-1]
-                        #print('Move {} to {}'.format(f, newf))
-                        #raise
+                    except UnspecifiedProblemType as upt:
+                        error = upt
+                        print(error)
+                    #except Exception as e:
+                    #    print('Unexpected Error: {}'.format(e))
+
                 fout.close()
                 fout2.close()
             else:
                 self.get_vectors_from_file(ldir)
 
-                #ui = Launcher(400,400,50,mtp.start.x)
-                #ui.setBoard(mtp.start)
-                #ui.drawBoard()
-                #ui.mainloop()
-                #mtp.printAllPaths()
-                print('=-=-===-=-=-===-=-=-===-=-=-===-=-=-===-=-=')
             end = time.clock()
             intvl = end - start
             print('Feature extraction took %.03f seconds' %intvl)
