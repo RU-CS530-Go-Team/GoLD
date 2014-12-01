@@ -3,7 +3,7 @@ Created on Nov 17, 2014
 
 @author: JBlackmore
 '''
-from Feature import Feature
+from gold.features.Feature import Feature
 
 class StoneCountFeature(Feature):
     '''
