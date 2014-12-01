@@ -214,11 +214,11 @@ class LocalShapesFeature(Feature):
 
     features = list(features2)+list(featuresDiff)
 
-    #return features
+    return features
 
-    model = Model("features/localShapeModel.txt",0)
+    #model = Model("features/localShapeModel.txt",0)
 
-    return model.getScoreCorrect(features)
+    #return model.getScoreCorrect(features)
 
   def set_shape_templates(self,shapeFile1,shapeFile2):
     f = open(shapeFile1)
@@ -444,10 +444,45 @@ class LocalShapesFeature(Feature):
     return features
 
   def is_shape_present(self,boardV1,boardV2,shapeV1,shapeV2):
+    featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    if not (featureVal):
+      shapeV1 = np.rot90(shapeV1)
+      shapeV2 = np.rot90(shapeV2)
+      featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    if not (featureVal):
+      shapeV1 = np.rot90(shapeV1)
+      shapeV2 = np.rot90(shapeV2)
+      featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    if not (featureVal):
+      shapeV1 = np.rot90(shapeV1)
+      shapeV2 = np.rot90(shapeV2)
+      featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    if not (featureVal):
+      shapeV1 = np.rot90(shapeV1)
+      shapeV1 = np.fliplr(shapeV1)
+      shapeV2 = np.rot90(shapeV2)
+      shapeV2 = np.fliplr(shapeV2)
+      featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    if not (featureVal):
+      shapeV1 = np.rot90(shapeV1)
+      shapeV2 = np.rot90(shapeV2)
+      featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    if not (featureVal):
+      shapeV1 = np.rot90(shapeV1)
+      shapeV2 = np.rot90(shapeV2)
+      featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    if not (featureVal):
+      shapeV1 = np.rot90(shapeV1)
+      shapeV2 = np.rot90(shapeV2)
+      featureVal = self.is_shape_present_helper(boardV1,boardV2,shapeV1,shapeV2)
+    return int(featureVal)
+
+  def is_shape_present_helper(self,boardV1,boardV2,shapeV1,shapeV2):
     convolvedBoard1 = signal.convolve2d(shapeV1,boardV1)
     convolvedBoard2 = signal.convolve2d(shapeV2,boardV2)
     convolvedBoardSum = convolvedBoard1 + convolvedBoard2
     targetNum = shapeV1.size * 2
     i,j = np.unravel_index(convolvedBoardSum.argmax(), convolvedBoardSum.shape)
     maxNum = convolvedBoardSum[i,j]
-    return int(targetNum == maxNum)
+    return (targetNum == maxNum)
+

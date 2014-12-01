@@ -40,18 +40,22 @@ class FeatureExtractor():
         x4 = numberLiveGroups(start, move, movePosition, isblack).calculate_feature()
         x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature()
 
-        '''x6 = PatchExtractor(start, move, movePosition, isblack).calculate_feature()
+        '''patchEx = PatchExtractor(start, move, movePosition, isblack)
+        patchEx.setPatchSize(6)
+        x6 = patchEx.calculate_feature()
 
         for row in x6:
-          fout=open('extraneous/games/patches.csv', 'a')
+          fout=open('extraneous/games/patches6.csv', 'a')
           fout.write(','.join([str(x) for x in row]))
           fout.write('\n')
           fout.close()'''
 
-        #x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature()
+        x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature()
 
         #return x6
-        return [x0, x1, x2, x3, x4, x5]
+        #return [x0, x1, x2, x3, x4, x5]
+        return [x0, x1, x2, x3, x4] + x5 + x6
+        #return [x0, x1, x2, x3, x4] + x6
         #return [x0] + x5
         #return [x0] + x6
         #return 0

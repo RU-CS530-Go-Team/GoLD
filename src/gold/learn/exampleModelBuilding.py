@@ -91,10 +91,25 @@ temp.reduceDimensions()
 temp.evaluateModel("extraneous/games/train/modelSVM.txt")
 
 #Use other models
+temp = ModelBuilder(["extraneous/games/train/featuresBtL.csv"])
+temp.downSample()
+#Weighted SVM: Class 0 Weight: 1, Class 1 Weight: 2
+temp.buildModelSVM("extraneous/games/train/modelSVM.txt",weights={0:2,1:3})
+#5-Nearest Neighbors
+temp.buildModelNeighbors("extraneous/games/train/modelNeighbors.txt",5)
+#Random forest of 10 trees
+temp.buildModelRF("extraneous/games/train/modelRF.txt",10)
+temp.buildModelNB("extraneous/games/train/modelNB.txt")
+temp.setData(["extraneous/games/dev/featuresBtL.csv"])
+temp.evaluateModel("extraneous/games/train/modelSVM.txt")
+temp.evaluateModel("extraneous/games/train/modelNeighbors.txt")
+temp.evaluateModel("extraneous/games/train/modelRF.txt")
+temp.evaluateModel("extraneous/games/train/modelNB.txt")
+
 temp = ModelBuilder(["extraneous/games/train/featuresWtK.csv"])
 temp.downSample()
 #Weighted SVM: Class 0 Weight: 1, Class 1 Weight: 2
-temp.buildModelSVM("extraneous/games/train/modelSVM.txt",[1 2])
+temp.buildModelSVM("extraneous/games/train/modelSVM.txt",weights={0:2,1:3})
 #5-Nearest Neighbors
 temp.buildModelNeighbors("extraneous/games/train/modelNeighbors.txt",5)
 #Random forest of 10 trees
