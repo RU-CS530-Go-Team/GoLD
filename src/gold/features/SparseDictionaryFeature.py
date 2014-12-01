@@ -16,7 +16,7 @@ import pickle
 
 class SparseDictionaryFeature(Feature):
 
-  def calculate_feature(self):
+  def calculate_feature(self, dataDir='features/'):
     patchEx1 = PatchExtractor(self.start, self.start, self.movePosition, self.isblack)
     patchEx2 = PatchExtractor(self.start, self.move, self.movePosition, self.isblack)
 
@@ -35,7 +35,7 @@ class SparseDictionaryFeature(Feature):
     data61 = patchEx1.calculate_feature()
     data62 = patchEx2.calculate_feature()'''
 
-    f = open('features/dictionary4.txt')
+    f = open(dataDir+'dictionary4.txt')
     dictionaryData = f.read()
     f.close()
     dictionary = pickle.loads(dictionaryData)
@@ -44,7 +44,7 @@ class SparseDictionaryFeature(Feature):
     data = data2 - data1
     features4 = np.amax(data, axis=0)
 
-    f = open('features/dictionary5.txt')
+    f = open(dataDir+'dictionary5.txt')
     dictionaryData = f.read()
     f.close()
     dictionary = pickle.loads(dictionaryData)

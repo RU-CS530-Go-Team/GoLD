@@ -183,7 +183,7 @@ class LocalShapesSelector():
 
 class LocalShapesFeature(Feature):
 
-  def calculate_feature(self):
+  def calculate_feature(self, dataDir='features/'):
     '''startBoard = self.convert_board(self.start,0)'''
     startBoard1 = self.convert_board(self.start,1)
     startBoard2 = self.convert_board(self.start,-1)
@@ -205,7 +205,7 @@ class LocalShapesFeature(Feature):
     #features1 = np.asarray(self.extract_template_information(startBoard1,startBoard2))
     #features2 = np.asarray(self.extract_template_information(moveBoard1,moveBoard2))
 
-    self.set_shape_templates("features/shapeSet1.txt","features/shapeSet2.txt")
+    self.set_shape_templates(dataDir+"shapeSet1.txt",dataDir+"shapeSet2.txt")
 
     features1 = np.asarray(self.extract_features(startBoard1,startBoard2))
     features2 = np.asarray(self.extract_features(moveBoard1,moveBoard2))
@@ -214,11 +214,11 @@ class LocalShapesFeature(Feature):
 
     features = list(features2)+list(featuresDiff)
 
-    return features
+    #return features
 
-    #model = Model("features/localShapeModel.txt",0)
+    model = Model(dataDir+"localShapeModel.txt",0)
 
-    #return model.getScoreCorrect(features)
+    return model.getScoreCorrect(features)
 
   def set_shape_templates(self,shapeFile1,shapeFile2):
     f = open(shapeFile1)
