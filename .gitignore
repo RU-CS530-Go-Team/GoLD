@@ -1,2 +1,4 @@
 src/gold/extraneous/games/
 *.pyc
+*.project
+*.pydevproject
