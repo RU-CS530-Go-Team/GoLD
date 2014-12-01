@@ -10,17 +10,13 @@ import re
 
 class MoveTreeParser():
 
-  blackFirst = True
-  moveID = None
-  parent = None
-  solutionStates = None
-  terminalStates = None
-  problemType = 0
-  flipColors = False
-  boardDimensions = None
 
 
   def __init__(self, gameFile):
+    self.blackFirst = True
+    self.problemType = 0
+    self.flipColors = False
+    self.boardDimensions = None
     self.moveID = {}
     self.parent = {}
     self.solutionStates = []
@@ -37,7 +33,7 @@ class MoveTreeParser():
     firstBlackMove = gameData.find(';B')
     firstWhiteMove = gameData.find(';W')
 
-    if (firstBlackMove > firstWhiteMove):
+    if (firstBlackMove > firstWhiteMove or firstBlackMove<0):
       self.blackFirst = False
     else:
       self.blackFirst = True
@@ -59,6 +55,8 @@ class MoveTreeParser():
 
     if self.problemType == 0:
       raise Exception("No Specified Problem Type")
+      #if not self.blackFirst:
+       # self.flipColors = True
 
     if self.problemType == 2 or self.problemType == 3:
       self.flipColors = True
@@ -137,7 +135,7 @@ class MoveTreeParser():
     for node in self.solutionStates:
       parentNode = self.parent[node]
       solutionNodes.append(node)
-      while parentNode != 0:
+      while parentNode > 0:
         solutionNodes.append(parentNode)
         parentNode = self.parent[parentNode]
     return set(solutionNodes)
@@ -169,7 +167,7 @@ class MoveTreeParser():
       currentPath = []
       parentNode = self.parent[node]
       currentPath.append(node)
-      while parentNode != 0:
+      while parentNode > 0:
         currentPath.append(parentNode)
         parentNode = self.parent[parentNode]
       currentPath.reverse()
@@ -192,8 +190,8 @@ class MoveTreeParser():
     paths = self.getAllPaths()
     for path in paths:
       for node in path:
-        print self.getMove(node)
-      print "\n"
+        print (self.getMove(node))
+      print ("\n")
 
   def getProblemType(self):
     return self.problemType
@@ -369,10 +367,10 @@ class MoveTreeParser():
       xList.append(move['x'])
       yList.append(move['y'])
 
-    self.boardDimensions['xMax'] = max(xList)
-    self.boardDimensions['xMin'] = min(xList)
-    self.boardDimensions['yMax'] = max(yList)
-    self.boardDimensions['yMin'] = min(yList)
+    self.boardDimensions['xMax'] = min(max(xList)+2,18) 
+    self.boardDimensions['xMin'] = max(min(xList)-2,0)
+    self.boardDimensions['yMax'] = min(max(yList)+2,18)
+    self.boardDimensions['yMin'] = max(min(yList)-2,0)
 
   def parseStartState(self, gameData):
     boardSizeLocation = gameData.find("SZ")
