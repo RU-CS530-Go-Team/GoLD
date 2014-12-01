@@ -1,4 +1,5 @@
 from gold.models.board import StoneGrouper
+#from board import StoneGrouper, Board
 
 def determineLife(board, color):
     if color:
@@ -54,8 +55,11 @@ def determineLife(board, color):
                     groups_by_region[current_region].append(current_group)
                 except:
                     groups_by_region[current_region] = [current_group]
+    #print enclosed_regions
+    #print groups_by_region
     #Starting Benson's Algorithm
     initial_groups = sorted(initial_groups)
+    if len(initial_groups) == 0 or len(enclosed_regions) == 0: return []
     while(True):
         modified = False
         for chain in initial_groups:
@@ -64,6 +68,7 @@ def determineLife(board, color):
                 if vital(chain, board, region):
                     num_vital += 1
             if num_vital < 2:
+                #print chain
                 initial_groups.remove(chain)
                 modified = True
         if not modified:
@@ -113,4 +118,9 @@ def calculate_liberties(group, board):
                 elif not (cm in board.black_stones or cm in board.white_stones):
                     current_liberties.add(cm)
         return list(current_liberties)
+    
+#temp_board = Board(4, 8)
+#emp_board.black_stones = [(0, 0), (1, 1)]
+#temp_board.white_stones = [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1)]
+#print determineLife(temp_board, True)
        
