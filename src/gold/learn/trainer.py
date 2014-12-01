@@ -53,6 +53,7 @@ class FeatureExtractor():
         #return x6
         return [x0, x1, x2, x3, x4, x5]
         #return [x0] + x5
+        #return [x0] + x6
         #return 0
 
 class MoveTrainer():

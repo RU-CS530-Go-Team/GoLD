@@ -25,6 +25,9 @@ class ModelBuilder():
         self.instances = np.concatenate((self.instances, instancesTemp), axis=0)
         self.classes = np.concatenate((self.classes, classesTemp), axis=0)
 
+  def setFeatures(self,featureIndexList):
+    self.instances = self.instances[:,featureIndexList]
+
   def buildScaler(self,outputFile):
     #Scale to zero mean, unit standard deviation
     self.scaler = preprocessing.StandardScaler().fit(self.instances)
@@ -57,6 +60,23 @@ class ModelBuilder():
 
   def reduceDimensions(self):
     self.instances = self.pca.transform(self.instances)
+
+  def downSample(self):
+    numCorrect = np.count_nonzero(self.classes)
+    numIncorrect = self.instances.shape[0] - numCorrect
+    correctIndices = np.where(self.classes == 1)
+    correctIndices = np.random.permutation(correctIndices[0][:])
+    incorrectIndices = np.where(self.classes == 0)
+    incorrectIndices = np.random.permutation(incorrectIndices[0][:])
+    numSamples = min([numCorrect,numIncorrect])
+    correctIndices = correctIndices[0:numSamples]
+    incorrectIndices = incorrectIndices[0:numSamples]
+    temp = self.instances[correctIndices,:]
+    temp = np.concatenate((temp,self.instances[incorrectIndices,:]),axis=0)
+    self.instances = temp
+    temp = self.classes[correctIndices,:]
+    temp = np.concatenate((temp,self.classes[incorrectIndices,:]),axis=0)
+    self.classes = temp
 
   def buildModelSVM(self,outputFile,weights=None):
     classifier = svm.LinearSVC(class_weight=weights)
@@ -97,7 +117,25 @@ class ModelBuilder():
     predictions = classifier.predict(self.instances)
     correct = (predictions == self.classes)
     #returns percent correctly classified
-    return float(sum(correct)) / float(self.classes.shape[0])
+    accuracy = float(sum(correct)) / float(self.classes.shape[0])
+
+    positiveIndices = np.where(self.classes == 1)
+    negativeIndices = np.where(self.classes == 0)
+
+    positivePredictiveIndices = np.where(predictions == 1)
+    negativePredictiveIndices = np.where(predictions == 0)
+
+    truePositives = len(np.intersect1d(positiveIndices[0][:],positivePredictiveIndices[0][:]))
+    falseNegatives = len(np.intersect1d(positiveIndices[0][:],negativePredictiveIndices[0][:]))
+    falsePositives = len(np.intersect1d(negativeIndices[0][:],positivePredictiveIndices[0][:]))
+
+    precision = float(truePositives) / (float(truePositives) + float(falsePositives))
+
+    recall = float(truePositives) / (float(truePositives) + float(falseNegatives))
+
+    fmeasure = 2*(precision*recall) / (precision + recall)
+
+    return[precision, recall, fmeasure, accuracy]
 
 class Model():
   # 0:SVM, 1:kNN, 2:NB, 3:RF

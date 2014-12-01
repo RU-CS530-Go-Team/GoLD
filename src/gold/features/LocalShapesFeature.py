@@ -16,6 +16,7 @@ class LocalShapeModelGenerator():
 
   def __init__(self,dataFileList,outputFile):
     temp = ModelBuilder(dataFileList)
+    temp.downSample()
     temp.buildModelSVM(outputFile)
 
 class LocalShapesSelector():
