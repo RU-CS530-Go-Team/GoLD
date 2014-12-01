@@ -8,9 +8,13 @@ from array import array
 from gold.models.board import Board
 import re
 
+class UnspecifiedProblemType(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+    
 class MoveTreeParser():
-
-
 
   def __init__(self, gameFile):
     self.blackFirst = True
@@ -54,7 +58,7 @@ class MoveTreeParser():
     self.computeProblemType(gameData,position)
 
     if self.problemType == 0:
-      raise Exception("No Specified Problem Type")
+      raise UnspecifiedProblemType("No Specified Problem Type")
       #if not self.blackFirst:
        # self.flipColors = True
 
@@ -103,14 +107,17 @@ class MoveTreeParser():
       elif currentChar == "C":
         finalSquareBracketPosition = gameData.find(']',position-1)
         if gameData.find('RIGHT',position-1,finalSquareBracketPosition) != -1:
-          currentMoveSet = currentMoveSet[0:5]
-          maxMoveID += 1
-          self.moveID[maxMoveID] = currentMoveSet
-          self.parent[maxMoveID] = currentParent
-          currentParent = maxMoveID
-          currentMoveSet = ""
-          self.solutionStates.append(maxMoveID)
-          self.terminalStates.append(maxMoveID)
+          if len(currentMoveSet)<5:
+            print('No move to comment on')
+          else:
+            currentMoveSet = currentMoveSet[0:5]
+            maxMoveID += 1
+            self.moveID[maxMoveID] = currentMoveSet
+            self.parent[maxMoveID] = currentParent
+            currentParent = maxMoveID
+            currentMoveSet = ""
+            self.solutionStates.append(maxMoveID)
+            self.terminalStates.append(maxMoveID)
         position = finalSquareBracketPosition + 1
       else:
         currentMoveSet += currentChar
@@ -146,6 +153,8 @@ class MoveTreeParser():
     return allNodes.difference(solutionNodes)
 
   def getMove(self,ID):
+    if self.moveID[ID] == None:
+      raise Exception('There is no move for ID={}'.format(ID))
     return self.moveID[ID]
 
   def formatMove(self,moveString):
@@ -357,7 +366,10 @@ class MoveTreeParser():
 
     solutionNodes = self.getSolutionNodes()
     for node in solutionNodes:
-      move = self.formatMove(self.getMove(node))
+      moveString = self.getMove(node)
+      if moveString==None or len(moveString)==0:
+        raise Exception('Move string not found for node {}'.format(node))
+      move = self.formatMove(moveString)
       xList.append(move['x'])
       yList.append(move['y'])
 
