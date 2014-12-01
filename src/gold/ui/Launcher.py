@@ -17,19 +17,10 @@ DEFAULT_HEIGHT = 400
 DEFAULT_MARGIN = 12
 DEFAULT_SPACES = 19
 
-''' Places a stone of color 'color' on the 
-    space nearest (x, y) on Canvas C. 
+''' Places a stone of color 'color' on the
+    space nearest (x, y) on Canvas C.
 '''
 class Launcher:
-    '''    dim_x = DEFAULT_WIDTH
-        dim_y = DEFAULT_WIDTH
-        margin = DEFAULT_MARGIN
-        spaces = DEFAULT_SPACES
-        diam = (float(dim_x)-2*float(margin))/float(spaces-1)
-        board = Board(spaces, spaces)
-        ovals = []
-        C=None
-    '''    
     def __init__(self, dim_x, dim_y, margin, spaces, board=None):
         self.dim_x = dim_x
         self.dim_y = dim_y
@@ -56,7 +47,6 @@ class Launcher:
         # Left-click for white, right-click for black
         self.C.bind("<Button-1>", callback2)
         self.C.bind("<Button-3>", callback)
-        
 
     def goForWhite(self, pi, pj):
         #tree = MinMaxTree(self.board, False, True, 0, 0.0, 'b({},{})'.format(pi,pj))
@@ -66,9 +56,9 @@ class Launcher:
         #print(self.board)
         self.drawBoard()
 
-    def mainloop(self):        
+    def mainloop(self):
         mainloop()
-        
+
     def computeSpace(self, x_coord, y_coord):
         i = int(round((y_coord-self.margin)/self.diam))
         if( i<0 ):
@@ -81,12 +71,12 @@ class Launcher:
         elif( j>self.spaces-1 ):
             j = self.spaces - 1
         return [i, j]
-    
+
     def computeCoord(self, i, j):
-        y = self.margin+round((i)*self.diam) 
+        y = self.margin+round((i)*self.diam)
         x = self.margin + round((j)*self.diam)
         return [x, y]
-    
+
     def placeStoneNear(self, x, y, color):
         [i, j] = self.computeSpace(x, y)
         #print("test.place_stone({},{}, {})".format(i,j, color=='black'))
@@ -118,7 +108,7 @@ class Launcher:
         self.ovals.append(self.C.create_oval(x0, y0, x1, y1, fill='black'))
     def setBoard(self, newboard):
         self.board = newboard
-        
+
     def drawGrid(self):
         for i in range(self.spaces):
             self.C.create_line(self.margin, self.margin+i*self.diam, self.dim_x-self.margin, self.margin+i*self.diam)
@@ -133,9 +123,9 @@ class Launcher:
         self.drawPoint(self.spaces-4, (self.spaces-1)/2)
         self.drawPoint((self.spaces-1)/2, self.spaces-4)
 
-    ''' Draws board dim_x x dim_y pixels, with margin 'margin' 
-        and number of spaces 'spaces'. Only tested with (400, 400, 12, 19).   
-    ''' 
+    ''' Draws board dim_x x dim_y pixels, with margin 'margin'
+        and number of spaces 'spaces'. Only tested with (400, 400, 12, 19).
+    '''
     def drawBoard(self): #board, dim_x, dim_y, diam, margin, spaces):
         #i = 0
         for c in self.C.children:
@@ -224,7 +214,7 @@ def load_problem_solution(f):
         if outcome==1: 
             return move
     return None
-    
+
 if __name__ == '__main__':
     if len(sys.argv)>1:
         solution = load_problem_solution(sys.argv[1])
@@ -234,5 +224,3 @@ if __name__ == '__main__':
     
     ui.drawBoard()
     ui.mainloop()
-
-
