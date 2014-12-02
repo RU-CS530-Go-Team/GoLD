@@ -11,9 +11,49 @@ def findAliveGroups(board, color):
         other = board.black_stones
     initial_groups = [list(x) for x in StoneGrouper(stones).groups]
     connected_groups = [list(x) for x in StoneGrouper(stones, board).groups]
-    ans = []
+    fill_board = []
+    for i in range(board.x):
+        temp = []
+        for w in range(board.y):
+            temp.append(0)
+        fill_board.append(temp)
+    for x, y in stones:
+        fill_board[x][y] = 1
+    start_color = 2
+    for x_i, x in enumerate(fill_board):
+        for y_i, y in enumerate(x):
+            if y == 0:
+                flood_fill(fill_board, (x_i, y_i), 0, start_color)
+                start_color += 1
+    #Split up the filled groups into something that we can easily parse
+    regions = {}
+    for x_i, x in enumerate(fill_board):
+        for y_i, y in enumerate(x):
+            if y == 0 or y == 1: continue
+            try:
+                regions[y].append((x_i, y_i))
+            except:
+                regions[y] = [(x_i, y_i)]
+    #remove all places taken up by the other color of stones
+    for current_region in regions:
+        for check in other:
+            if check in regions[current_region]:
+                regions[current_region].remove(check)
+    #Determine which are enclosed by whatever color we're working on
+    groups = set()
     for current_group in connected_groups:
-        print current_group
+        max_X = max([x[0] for x in current_group]) +1
+        max_Y = max([x[1] for x in current_group]) +1
+        min_X = min([x[0] for x in current_group]) -1
+        min_Y = min([x[1] for x in current_group]) -1
+        
+        for current_region in regions:
+            if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in regions[current_region]):
+                groups.add(current_region)
+    
+    ans = []
+    for current_group in groups:
+        #print current_group
         if alive(current_group, board, color, 0):
             ans.append(current_group)
     
