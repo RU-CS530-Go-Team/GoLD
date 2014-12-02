@@ -1,5 +1,6 @@
 from life import *
 from gold.models.board import Board, IllegalMove
+#from board import Board, IllegalMove
 from copy import deepcopy
 
 checked = {}
@@ -51,19 +52,18 @@ def findAliveGroups(board, color):
         
         for current_region in regions:
             if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in regions[current_region]):
-                groups.add(current_region)
+                groups.add(tuple(current_group))
     
     ans = []
-    checked = {}
     for current_group in groups:
-        #print current_group
+        current_group = list(current_group)
         if alive(current_group, board, color, 0):
             ans.append(current_group)
-    
     return ans
 
 def alive(current_group, board, color, depth):
-    if (board.black_stones, board.white_stones, board.x, board.y, current_group) in checked:
+    if (tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group)) in checked:
+        #print "Redundant"
         return checked[(board.black_stones, board.white_stones, board.x, board.y, current_group)]
     #print "Doing this group"
     #print current_group
@@ -76,7 +76,7 @@ def alive(current_group, board, color, depth):
                 #print "Returning"
                 #print board.black_stones
                 #print board.white_stones
-                checked[(board.black_stones, board.white_stones, board.x, board.y, current_group)] = True
+                checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))] = True
                 return True
         #return True
     #if depth > 5: return False
@@ -119,7 +119,7 @@ def alive(current_group, board, color, depth):
                 continue
             
         if not ans: break
-    checked[(board.black_stones, board.white_stones, board.x, board.y, current_group)] = ans
+    checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))] = ans
     return ans
 
 #temp_board = Board(4, 8)
