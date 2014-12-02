@@ -64,7 +64,7 @@ def findAliveGroups(board, color):
 def alive(current_group, board, color, depth):
     if (tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group)) in checked:
         #print "Redundant"
-        return checked[(board.black_stones, board.white_stones, board.x, board.y, current_group)]
+        return checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))]
     #print "Doing this group"
     #print current_group
     live_groups = determineLife(board, color)
