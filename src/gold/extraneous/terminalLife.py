@@ -49,11 +49,11 @@ def findAliveGroups(board, color):
         max_Y = max([x[1] for x in current_group]) +1
         min_X = min([x[0] for x in current_group]) -1
         min_Y = min([x[1] for x in current_group]) -1
-        
+
         for current_region in regions:
             if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in regions[current_region]):
                 groups.add(tuple(current_group))
-    
+
     ans = []
     for current_group in groups:
         current_group = list(current_group)
@@ -79,7 +79,7 @@ def alive(current_group, board, color, depth):
                 checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))] = True
                 return True
         #return True
-    #if depth > 5: return False
+    if depth > 5: return False
     max_X = max([x[0] for x in current_group]) +1
     max_Y = max([x[1] for x in current_group]) +1
     min_X = min([x[0] for x in current_group]) -1
@@ -117,7 +117,7 @@ def alive(current_group, board, color, depth):
                 #print type(inst)
                 #print inst.args
                 continue
-            
+
         if not ans: break
     checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))] = ans
     return ans

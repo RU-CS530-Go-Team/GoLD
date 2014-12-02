@@ -216,7 +216,12 @@ class LocalShapesFeature(Feature):
 
     #return features
 
-    model = Model(dataDir+"localShapeModel.txt",0)
+    model = None
+
+    if self.isBlack:
+      model = Model(dataDir+"localShapeModelBtL.txt",0)
+    else:
+      model = Model(dataDir+"localShapeModelWtK.txt",0)
 
     return model.getScoreCorrect(features)
 

@@ -16,6 +16,24 @@ import pickle
 
 class SparseDictionaryFeature(Feature):
 
+  def get_transformed_data(self,patchSize, dataDir='features/'):
+    patchEx1 = PatchExtractor(self.start, self.start, self.movePosition, self.isblack)
+    patchEx2 = PatchExtractor(self.start, self.move, self.movePosition, self.isblack)
+    patchEx1.setPatchSize(patchSize)
+    patchEx2.setPatchSize(patchSize)
+    data1 = patchEx1.calculate_feature()
+    data2 = patchEx2.calculate_feature()
+
+    f = open(dataDir+'dictionary' + str(patchSize) + '.txt')
+    dictionaryData = f.read()
+    f.close()
+    dictionary = pickle.loads(dictionaryData)
+    data1 = dictionary.transform(data1)
+    data2 = dictionary.transform(data2)
+    data = data2 - data1
+
+    return data;
+
   def calculate_feature(self, dataDir='features/'):
     patchEx1 = PatchExtractor(self.start, self.start, self.movePosition, self.isblack)
     patchEx2 = PatchExtractor(self.start, self.move, self.movePosition, self.isblack)

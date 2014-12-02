@@ -14,7 +14,7 @@ class DistanceFromCenterFeature(Feature):
         furthest = max([((x[0] - originalCenter[0]) ** 2 + (x[1] - originalCenter[1]) ** 2) ** .5 for x in self.start.black_stones + self.start.white_stones])
         black_move = self.movePosition
         #this shit can get replaced if we include what the move being considered is...
-        '''        
+        '''
         black_move = filter(lambda x: x not in self.start.black_stones, self.move.black_stones)
         white_move = filter(lambda x: x not in self.start.white_stones, self.move.white_stones)
         if black_move == []:

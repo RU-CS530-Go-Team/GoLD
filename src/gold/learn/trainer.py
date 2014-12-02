@@ -23,7 +23,7 @@ class FeatureExtractor():
     def __init__(self):
         pass
 
-    def extract_features(self, start, move, movePosition, isblack):
+    def extract_features(self, start, move, movePosition, isblack,outcome):
         x0 = ColorFeature(start, move, movePosition, isblack).calculate_feature()
         if( not isblack ):
             newstart = Board(start.x, start.y)
@@ -38,7 +38,7 @@ class FeatureExtractor():
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
         x4 = numberLiveGroups(start, move, movePosition, isblack).calculate_feature()
-        x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature(dataDir="../features/")
+        #x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature(dataDir="features/")
 
         '''patchEx = PatchExtractor(start, move, movePosition, isblack)
         patchEx.setPatchSize(6)
@@ -50,15 +50,16 @@ class FeatureExtractor():
           fout.write('\n')
           fout.close()'''
 
-        x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature(dataDir="../features/")
+        #x6 = SparseDictionaryFeature(start, move, movePosition, isblack).calculate_feature(dataDir="../features/")
 
         #return x6
         #return [x0, x1, x2, x3, x4, x5]
-        return [x0, x1, x2, x3, x4,x5] + x6
+        #return [x0, x1, x2, x3, x4, x5] + x6
         #return [x0, x1, x2, x3, x4] + x6
         #return [x0] + x5
         #return [x0] + x6
-        #return 0
+        return [x0] + x1 + x2 + [x3] + x4
+        #return [0]
 
 class MoveTrainer():
 
@@ -131,7 +132,7 @@ class MoveTrainer():
                                 outcome = 1
                             ''' Assume all moves for the "antagonist" are correct '''
                             # outcome = 1
-                        features = features + fe.extract_features(start, move, (move_x, move_y), saysblack)
+                        features = features + fe.extract_features(start, move, (move_x, move_y), saysblack,outcome)
                         #features = fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features.append(outcome)
                         movesConsidered.add((parent, mid))
@@ -146,6 +147,7 @@ class MoveTrainer():
         return vectors
 
     def train(self):
+
         start = time.clock()
         for ldir in self.dirs:
             if os.path.isdir(ldir):
@@ -179,8 +181,8 @@ class MoveTrainer():
                     except UnspecifiedProblemType as upt:
                         error = upt
                         print(error)
-                    #except Exception as e:
-                    #    print('Unexpected Error: {}'.format(e))
+                    except Exception as e:
+                        print('Unexpected Error: {}'.format(e))
 
                 fout.close()
                 fout2.close()
@@ -190,5 +192,7 @@ class MoveTrainer():
             end = time.clock()
             intvl = end - start
             print('Feature extraction took %.03f seconds' %intvl)
+
+
 if __name__ == '__main__':
     MoveTrainer(sys.argv[1:]).train()
