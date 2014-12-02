@@ -2,6 +2,8 @@ from life import *
 from gold.models.board import Board, IllegalMove
 from copy import deepcopy
 
+checked = {}
+
 def findAliveGroups(board, color):
     if color:
         stones = board.black_stones
@@ -52,6 +54,7 @@ def findAliveGroups(board, color):
                 groups.add(current_region)
     
     ans = []
+    checked = {}
     for current_group in groups:
         #print current_group
         if alive(current_group, board, color, 0):
@@ -60,6 +63,8 @@ def findAliveGroups(board, color):
     return ans
 
 def alive(current_group, board, color, depth):
+    if (board.black_stones, board.white_stones, board.x, board.y, current_group) in checked:
+        return checked[(board.black_stones, board.white_stones, board.x, board.y, current_group)]
     #print "Doing this group"
     #print current_group
     live_groups = determineLife(board, color)
@@ -71,6 +76,7 @@ def alive(current_group, board, color, depth):
                 #print "Returning"
                 #print board.black_stones
                 #print board.white_stones
+                checked[(board.black_stones, board.white_stones, board.x, board.y, current_group)] = True
                 return True
         #return True
     #if depth > 5: return False
@@ -113,6 +119,7 @@ def alive(current_group, board, color, depth):
                 continue
             
         if not ans: break
+    checked[(board.black_stones, board.white_stones, board.x, board.y, current_group)] = ans
     return ans
 
 #temp_board = Board(4, 8)
