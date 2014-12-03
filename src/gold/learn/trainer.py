@@ -17,6 +17,7 @@ from gold.features.numberLiveGroups import numberLiveGroups
 from gold.features.LocalShapesFeature import LocalShapesFeature
 from gold.features.PatchExtractor import PatchExtractor
 from gold.features.SparseDictionaryFeature import SparseDictionaryFeature
+from gold.features.HuMomentsFeature import HuMomentsFeature
 
 class FeatureExtractor():
 
@@ -38,6 +39,8 @@ class FeatureExtractor():
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
         x4 = numberLiveGroups(start, move, movePosition, isblack).calculate_feature()
+        x5 = HuMomentsFeature(start, move, movePosition, isblack).calculate_feature()
+
         #x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature(dataDir="features/")
 
         '''patchEx = PatchExtractor(start, move, movePosition, isblack)
@@ -58,7 +61,7 @@ class FeatureExtractor():
         #return [x0, x1, x2, x3, x4] + x6
         #return [x0] + x5
         #return [x0] + x6
-        return [x0] + x1 + x2 + [x3] + x4
+        return [x0] + x1 + x2 + [x3] + x4 + x5
         #return [0]
 
 class MoveTrainer():

@@ -4,6 +4,8 @@ from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import preprocessing
 from sklearn import decomposition
+from sklearn import cross_validation
+from sklearn import grid_search
 import numpy as np
 import pickle
 
@@ -85,6 +87,20 @@ class ModelBuilder():
     f = open(outputFile,"w")
     f.write(modelData)
     f.close()
+
+  '''def buildModelSVMRBF(self,outputFile):
+    C_range = 10. ** np.arange(-3, 8)
+    gamma_range = 10. ** np.arange(-5, 4)
+    param_grid = dict(gamma=gamma_range, C=C_range)
+    grid = grid_search.GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cross_validation.StratifiedKFold(y=self.classes, n_folds=5))
+    grid.fit(self.instances, self.classes)
+    print("The best classifier is: ", grid.best_estimator_)
+    #classifier = svm.SVC(class_weight=weights)
+    #classifier.fit(self.instances, self.classes)
+    #modelData = pickle.dumps(classifier)
+    #f = open(outputFile,"w")
+    #f.write(modelData)
+    #f.close()'''
 
   def buildModelNeighbors(self,outputFile,numNeighbors):
     classifier = neighbors.KNeighborsClassifier(numNeighbors)

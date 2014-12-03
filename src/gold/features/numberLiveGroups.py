@@ -16,7 +16,7 @@ class numberLiveGroups(Feature):
         firstTotal = float(self.getNumGroups(self.start,self.isblack))
         second = len(determineLife(self.move, self.isblack))
         secondTotal = float(self.getNumGroups(self.start,self.isblack))
-        return [(second/secondTotal+0.0001), (second/(secondTotal+0.0001)) - (first/(firstTotal+0.0001)), second, second - first]
+        return [second/(secondTotal+0.0001), (second/(secondTotal+0.0001)) - (first/(firstTotal+0.0001)), second, second - first]
 
     def getNumGroups(self,board,color):
       if color:
