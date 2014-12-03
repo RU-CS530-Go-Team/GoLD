@@ -13,21 +13,18 @@ temp.train()
 #0: Good move or bad move, 1: terminal solution state or not
 classType = 0
 
-#Down-sample and use SVM
+#SVM
 temp = ModelBuilder(["extraneous/games/train/featuresBtL.csv"],classType)
-temp.downSample()
 temp.buildModelSVM("extraneous/games/train/modelSVMBtL.txt")
 temp.setData(["extraneous/games/dev/featuresBtL.csv"],classType)
 temp.evaluateModel("extraneous/games/train/modelSVMBtL.txt")
 temp = ModelBuilder(["extraneous/games/train/featuresWtK.csv"],classType)
-temp.downSample()
 temp.buildModelSVM("extraneous/games/train/modelSVMWtK.txt")
 temp.setData(["extraneous/games/dev/featuresWtK.csv"],classType)
 temp.evaluateModel("extraneous/games/train/modelSVMWtK.txt")
 
-#Down-sample, scale data, and use SVM
+#Scale data and use SVM
 temp = ModelBuilder(["extraneous/games/train/featuresBtL.csv"],classType)
-temp.downSample()
 temp.buildScaler("extraneous/games/train/featuresBtLScaler.txt")
 temp.scaleData()
 temp.buildModelSVM("extraneous/games/train/modelSVM.txt")
@@ -36,7 +33,6 @@ temp.setScaler("extraneous/games/train/featuresBtLScaler.txt")
 temp.scaleData()
 temp.evaluateModel("extraneous/games/train/modelSVM.txt")
 temp = ModelBuilder(["extraneous/games/train/featuresWtK.csv"],classType)
-temp.downSample()
 temp.buildScaler("extraneous/games/train/featuresWtKScaler.txt")
 temp.scaleData()
 temp.buildModelSVM("extraneous/games/train/modelSVM.txt")
@@ -45,9 +41,8 @@ temp.setScaler("extraneous/games/train/featuresWtKScaler.txt")
 temp.scaleData()
 temp.evaluateModel("extraneous/games/train/modelSVM.txt")
 
-#Down-sample, scale data, apply PCA, and use SVM
+#Scale data, apply PCA, and use SVM
 temp = ModelBuilder(["extraneous/games/train/featuresBtL.csv"],classType)
-temp.downSample()
 temp.buildScaler("extraneous/games/train/featuresBtLScaler.txt")
 temp.scaleData()
 temp.buildDimensionReducer("extraneous/games/train/BtLReduce.txt",False)
@@ -60,7 +55,6 @@ temp.setDimensionReducer("extraneous/games/train/BtLReduce.txt")
 temp.reduceDimensions()
 temp.evaluateModel("extraneous/games/train/modelSVM.txt")
 temp = ModelBuilder(["extraneous/games/train/featuresWtK.csv"],classType)
-temp.downSample()
 temp.buildScaler("extraneous/games/train/featuresWtKScaler.txt")
 temp.scaleData()
 temp.buildDimensionReducer("extraneous/games/train/WtKReduce.txt",False)
@@ -73,9 +67,8 @@ temp.setDimensionReducer("extraneous/games/train/WtKReduce.txt")
 temp.reduceDimensions()
 temp.evaluateModel("extraneous/games/train/modelSVM.txt")
 
-#Down-sample, apply PCA with whitening, and use SVM
+#Apply PCA with whitening and use SVM
 temp = ModelBuilder(["extraneous/games/train/featuresBtL.csv"],classType)
-temp.downSample()
 temp.buildDimensionReducer("extraneous/games/train/BtLReduce.txt",True)
 temp.reduceDimensions()
 temp.buildModelSVM("extraneous/games/train/modelSVM.txt")
@@ -84,7 +77,6 @@ temp.setDimensionReducer("extraneous/games/train/BtLReduce.txt")
 temp.reduceDimensions()
 temp.evaluateModel("extraneous/games/train/modelSVM.txt")
 temp = ModelBuilder(["extraneous/games/train/featuresWtK.csv"],classType)
-temp.downSample()
 temp.buildDimensionReducer("extraneous/games/train/WtKReduce.txt",True)
 temp.reduceDimensions()
 temp.buildModelSVM("extraneous/games/train/modelSVM.txt")
