@@ -83,7 +83,7 @@ class ModelBuilder():
     temp = np.concatenate((temp,self.classes[incorrectIndices,:]),axis=0)
     self.classes = temp
 
-  def buildModelSVM(self,outputFile,weights=None):
+  def buildModelSVM(self,outputFile,weights='auto'):
     classifier = svm.LinearSVC(class_weight=weights)
     classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
