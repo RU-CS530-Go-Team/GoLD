@@ -87,6 +87,7 @@ class MoveTrainer():
         mtp = MoveTreeParser(f)
         #print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
         sn = mtp.getSolutionNodes()
+        ss = mtp.getSolutionStates()
         inc = mtp.getIncorrectNodes()
         probtyp = mtp.getProblemType()
         if probtyp == 1 or probtyp == 3: #Black to live
@@ -138,6 +139,7 @@ class MoveTrainer():
                         features = features + fe.extract_features(start, move, (move_x, move_y), saysblack,outcome)
                         #features = fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features.append(outcome)
+                        features.append(int(mid in ss))
                         movesConsidered.add((parent, mid))
                         vectors.append(features)
                         # Only train on the first wrong move for the protagonist

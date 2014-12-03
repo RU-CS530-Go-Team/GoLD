@@ -10,16 +10,19 @@ import numpy as np
 import pickle
 
 class ModelBuilder():
-  def __init__(self,inputFiles):
-    self.setData(inputFiles)
+  def __init__(self,inputFiles,classType):
+    self.setData(inputFiles,classType)
 
-  def setData(self,inputFiles):
+  def setData(self,inputFiles,classType):
     self.instances = np.array([])
     self.classes = np.array([])
     for dataFile in inputFiles:
       data = np.loadtxt(open(dataFile,"rb"),delimiter=",",skiprows=1)
-      instancesTemp = data[:,:data.shape[1]-1]
-      classesTemp = data[:,data.shape[1]-1]
+      instancesTemp = data[:,:data.shape[1]-2]
+      if classType == 0:
+        classesTemp = data[:,data.shape[1]-2]
+      elif classType == 1:
+        classesTemp = data[:,data.shape[1]-1]
       if self.instances.size == 0:
         self.instances = instancesTemp
         self.classes = classesTemp
