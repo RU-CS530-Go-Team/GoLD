@@ -10,7 +10,7 @@ class Feature():
     '''
     
 
-    def __init__(self, start, move, position, isblack):
+    def __init__(self, start, move, position, isblack, dataDir='../features/'):
         '''
         Constructor
         '''
@@ -18,6 +18,10 @@ class Feature():
         self.move = move
         self.movePosition=position
         self.isblack = isblack
+        self.dataDir = dataDir
         
+    def name(self):
+        return self.__class__.__name__
+    
     def calculate_feature(self):
         raise NotImplementedError('Please implement calculate_feature()')
