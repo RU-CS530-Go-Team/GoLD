@@ -1,4 +1,5 @@
 from array import array
+from copy import deepcopy
 
 class IllegalMove(Exception):
     def __init__(self, value):
@@ -52,7 +53,7 @@ class Board:
             return False
         if not (self.prior_moves[0][1] and self.prior_moves[1][1]):
             return False
-        if not ((self.prior_moves[0][1][2] == isblack) and (self.prior_moves[0][1][2] == isblack)):
+        if not ((self.prior_moves[0][2] == isblack) and (self.prior_moves[1][2] == isblack)):
             return False
         if not self.alone(x, y, isblack):
             return False
@@ -70,7 +71,7 @@ class Board:
         return True
 
     def place_stone(self, x, y, isblack):
-        old = (self.black_stones, self.white_stones, self.prior_moves)
+        old = (deepcopy(self.black_stones), deepcopy(self.white_stones), deepcopy(self.prior_moves))
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
             raise IllegalMove("({},{}) is Out of the Bounds of the Go Board".format(x,y))
         elif (x, y) in self.white_stones or (x, y) in self.black_stones:
