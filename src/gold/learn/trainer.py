@@ -17,6 +17,7 @@ from gold.features.numberLiveGroups import numberLiveGroups
 from gold.features.LocalShapesFeature import LocalShapesFeature
 from gold.features.PatchExtractor import PatchExtractor
 from gold.features.SparseDictionaryFeature import SparseDictionaryFeature
+from gold.features.HuMomentsFeature import HuMomentsFeature
 
 class FeatureExtractor():
 
@@ -38,6 +39,8 @@ class FeatureExtractor():
         x2 = DiffLiberties(start, move, movePosition, isblack).calculate_feature()
         x3 = DistanceFromCenterFeature(start, move, movePosition, isblack).calculate_feature()
         x4 = numberLiveGroups(start, move, movePosition, isblack).calculate_feature()
+        x5 = HuMomentsFeature(start, move, movePosition, isblack).calculate_feature()
+
         #x5 = LocalShapesFeature(start, move, movePosition, isblack).calculate_feature(dataDir="features/")
 
         '''patchEx = PatchExtractor(start, move, movePosition, isblack)
@@ -58,7 +61,7 @@ class FeatureExtractor():
         #return [x0, x1, x2, x3, x4] + x6
         #return [x0] + x5
         #return [x0] + x6
-        return [x0] + x1 + x2 + [x3] + x4
+        return [x0] + x1 + x2 + [x3] + x4 + x5
         #return [0]
 
 class MoveTrainer():
@@ -84,6 +87,7 @@ class MoveTrainer():
         mtp = MoveTreeParser(f)
         #print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
         sn = mtp.getSolutionNodes()
+        ss = mtp.getSolutionStates()
         inc = mtp.getIncorrectNodes()
         probtyp = mtp.getProblemType()
         if probtyp == 1 or probtyp == 3: #Black to live
@@ -135,6 +139,7 @@ class MoveTrainer():
                         features = features + fe.extract_features(start, move, (move_x, move_y), saysblack,outcome)
                         #features = fe.extract_features(start, move, (move_x, move_y), saysblack)
                         features.append(outcome)
+                        features.append(int(mid in ss))
                         movesConsidered.add((parent, mid))
                         vectors.append(features)
                         # Only train on the first wrong move for the protagonist

@@ -4,20 +4,25 @@ from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import preprocessing
 from sklearn import decomposition
+from sklearn import cross_validation
+from sklearn import grid_search
 import numpy as np
 import pickle
 
 class ModelBuilder():
-  def __init__(self,inputFiles):
-    self.setData(inputFiles)
+  def __init__(self,inputFiles,classType=0):
+    self.setData(inputFiles,classType)
 
-  def setData(self,inputFiles):
+  def setData(self,inputFiles,classType):
     self.instances = np.array([])
     self.classes = np.array([])
     for dataFile in inputFiles:
       data = np.loadtxt(open(dataFile,"rb"),delimiter=",",skiprows=1)
-      instancesTemp = data[:,:data.shape[1]-1]
-      classesTemp = data[:,data.shape[1]-1]
+      instancesTemp = data[:,:data.shape[1]-2]
+      if classType == 0:
+        classesTemp = data[:,data.shape[1]-2]
+      elif classType == 1:
+        classesTemp = data[:,data.shape[1]-1]
       if self.instances.size == 0:
         self.instances = instancesTemp
         self.classes = classesTemp
@@ -78,13 +83,21 @@ class ModelBuilder():
     temp = np.concatenate((temp,self.classes[incorrectIndices,:]),axis=0)
     self.classes = temp
 
-  def buildModelSVM(self,outputFile,weights=None):
+  def buildModelSVM(self,outputFile,weights='auto'):
     classifier = svm.LinearSVC(class_weight=weights)
     classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
     f.write(modelData)
     f.close()
+
+  '''def buildModelSVM(self,outputFile,weights='auto'):
+    classifier = svm.SVC(kernel='rbf',C=1.0,gamma=0.1,class_weight=weights)
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()'''
 
   def buildModelNeighbors(self,outputFile,numNeighbors):
     classifier = neighbors.KNeighborsClassifier(numNeighbors)
