@@ -4,18 +4,27 @@ class ModelEvaluator():
   def __init__(self,outputFile,trainingFiles,testFiles,labels):
     fout=open(outputFile, 'w')
     fout.write("Model,Precision,Recall,F-Measure,Accuracy")
+    fout.write("\n")
     for x in range(0,len(trainingFiles)):
-      trFile = trainingFiles[x]
-      teFile = testFiles[x]
+      trainingFile = trainingFiles[x]
+      testFile = testFiles[x]
       label = labels[x]
+      for model in range(0,8):
+        for downsample in range(0,2):
+          for scale in range(0,2):
+            for pca in range(0,3):
+              info = self.testModel(trainingFile,testFile,3,downsample,scale,pca,model,label)
+              fout.write(info)
+              fout.write("\n")
+
     fout.close()
 
-  def testModel(trainingFile,testFile,numRuns,downsample,scale,pca,model):
+  def testModel(self,trainingFile,testFile,numRuns,downsample,scale,pca,model,label):
     precision = 0
     recall = 0
     fmeasure = 0
     accuracy = 0
-    runType = ""
+    runType = label
 
     if model == 0:
       runType = runType + "LDA"
@@ -32,28 +41,49 @@ class ModelEvaluator():
     elif model == 6:
       runType = runType + "RandForest"
     elif model == 7:
-      runType = runType + "AdaBoost
+      runType = runType + "AdaBoost"
+
+    if scale == 1:
+      runType = runType + "-scale"
+
+    if downsample == 1:
+      runType = runType + "-down"
+
+    if pca == 1:
+      runType = runType + "-pca"
+    elif pca == 2:
+      runType = runType + "-pcaW"
 
     for i in range(0,numRuns):
       temp = ModelBuilder([trainingFile],1)
 
       if scale == 1:
-        runType = runType + "-scale"
         temp.buildScaler("scaler.txt")
         temp.scaleData()
 
       if downsample == 1:
-        runType = runType + "-down"
         temp.downSample()
 
       if pca == 1:
-        runType = runType + "-pca"
-        temp.buildDimensionReducer("reducer.txt",False)
-        temp.reduceDimensions()
+        try:
+          temp.buildDimensionReducer("reducer.txt",False)
+          temp.reduceDimensions()
+        except Exception as error:
+          print error
+          numRuns = numRuns - 1
+          continue
+          runType = runType + "-pcaErr"
+          pca = 0
       elif pca == 2:
-        runType = runType + "-pcaW"
-        temp.buildDimensionReducer("reducer.txt",True)
-        temp.reduceDimensions()
+        try:
+          temp.buildDimensionReducer("reducer.txt",True)
+          temp.reduceDimensions()
+        except Exception as error:
+          print error
+          numRuns = numRuns - 1
+          continue
+          runType = runType + "-pcaWErr"
+          pca = 0
 
       if model == 0:
         temp.buildModelLDA("model.txt")
@@ -62,15 +92,39 @@ class ModelEvaluator():
       elif model == 2:
         temp.buildModelLogReg("model.txt")
       elif model == 3:
-        temp.buildModelNeighbors("model.txt")
+        temp.buildModelNeighbors("model.txt",201,20,3)
       elif model == 4:
         temp.buildModelNB("model.txt")
       elif model == 5:
         temp.buildModelSVM("model.txt")
       elif model == 6:
-        temp.buildModelRF("model.txt")
+        temp.buildModelRF("model.txt",201,20,3)
       elif model == 7:
         temp.buildModelAdaBoost("model.txt")
+
+      temp.setData([testFile],1)
+
+      if scale == 1:
+        temp.setScaler("scaler.txt")
+        temp.scaleData()
+
+      if pca == 1 or pca == 2:
+        temp.setDimensionReducer("reducer.txt")
+        temp.reduceDimensions()
+
+      stats = temp.evaluateModel("model.txt")
+
+      precision = precision + stats[0]
+      recall = recall + stats[1]
+      fmeasure = fmeasure + stats[2]
+      accuracy = accuracy + stats[3]
+
+    precision = float(precision) / float(numRuns + 0.000001)
+    recall = float(recall) / float(numRuns + 0.000001)
+    fmeasure = float(fmeasure) / float(numRuns + 0.000001)
+    accuracy = float(accuracy) / float(numRuns + 0.000001)
+    print runType
+    return runType + "," + str(precision) + "," + str(recall) + "," + str(fmeasure) + "," + str(accuracy)
 
 
 

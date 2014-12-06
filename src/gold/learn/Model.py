@@ -128,10 +128,10 @@ class ModelBuilder():
     f.write(modelData)
     f.close()'''
 
-  def buildModelNeighbors(self,outputFile):
-    neighbor_range = np.arange(1,300,10)
+  def buildModelNeighbors(self,outputFile,maxSize=300,stepSize=10,folds=3):
+    neighbor_range = np.arange(1,maxSize,stepSize)
     param_grid = dict(n_neighbors = neighbor_range)
-    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=3)
+    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=folds)
     grid = grid_search.GridSearchCV(neighbors.KNeighborsClassifier(), param_grid=param_grid, cv=cv, verbose=5)
     grid.fit(self.instances, self.classes)
     classifier = grid.best_estimator_
@@ -149,10 +149,10 @@ class ModelBuilder():
     f.write(modelData)
     f.close()
 
-  def buildModelRF(self,outputFile):
-    num_trees = np.arange(1,300,10)
+  def buildModelRF(self,outputFile,maxTrees=300,stepSize=10,folds=3):
+    num_trees = np.arange(1,maxTrees,stepSize)
     param_grid = dict(n_estimators = num_trees)
-    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=3)
+    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=folds)
     grid = grid_search.GridSearchCV(ensemble.RandomForestClassifier(), param_grid=param_grid, cv=cv, verbose=5)
     grid.fit(self.instances, self.classes)
     classifier = grid.best_estimator_
