@@ -33,6 +33,26 @@ class Board:
                     ans += "-"
             ans += "\n"
         return ans
+    
+    def __hash__(self):
+        return hash(tuple([tuple(sorted(self.black_stones)), tuple(sorted(self.white_stones)), self.x, self.y]))
+        #return hash(tuple([sorted(tuple(board.black_stones)), sorted(tuple(board.white_stones)), self.x, self.y]))
+    
+    def __eq__(self, other):
+        if self.x != other.x:
+            return False
+        if self.y != other.y:
+            return False
+        this_white = set(self.white_stones)
+        other_white = set(other.white_stones)
+        if this_white!=other_white:
+            return False
+        this_black = set(self.black_stones)
+        other_black = set(other.black_stones)
+        if this_black!=other_black:
+            return False
+        return True
+        #return (self.__hash__().__eq__(other.__hash__()))
 
     def clone(self):
         new = Board(self.x, self.y)
@@ -75,7 +95,7 @@ class Board:
         if x < 0 or x >= self.x or y < 0 or y >= self.y:
             raise IllegalMove("({},{}) is Out of the Bounds of the Go Board".format(x,y))
         elif (x, y) in self.white_stones or (x, y) in self.black_stones:
-            raise IllegalMove("There is already a stone there")
+            raise IllegalMove("({},{}) There is already a stone there".format(x,y))
         elif self.is_ko(x, y, isblack):
             raise IllegalMove("Ko")
         elif isblack:
