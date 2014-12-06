@@ -9,7 +9,7 @@ from gold.features.SparseDictionaryFeature import SparseDictionaryFeature
 from gold.features.HuMomentsFeature import HuMomentsFeature
 from gold.features.Feature import Feature
 
-FEATURE_SERVICES = ['ColorFeature', 'StoneCountFeature', 'DiffLiberties', 'DistanceFromCenterFeature', 
+FEATURE_SERVICES = ['ColorFeature', 'StoneCountFeature', 'DiffLiberties',  
                     'DistanceFromCenterFeature', 'numberLiveGroups', 'HuMomentsFeature',
                     'LocalShapesFeature', 'SparseDictionaryFeature']
 
