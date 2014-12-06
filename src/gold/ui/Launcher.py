@@ -132,6 +132,7 @@ class Launcher:
             c.destroy()
         for [color,stones] in [['white', self.board.white_stones], ['black', self.board.black_stones]]:
             living_groups = determineLife(self.board, color)
+            #print living_groups
             self.C.delete(color)
             for stone in stones:
                 alive = False

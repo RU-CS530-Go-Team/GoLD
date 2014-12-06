@@ -1,4 +1,5 @@
 from gold.models.board import StoneGrouper
+from copy import deepcopy
 #from board import StoneGrouper, Board
 
 def determineLife(board, color):
@@ -62,7 +63,7 @@ def determineLife(board, color):
     if len(initial_groups) == 0 or len(enclosed_regions) == 0: return []
     while(True):
         modified = False
-        for chain in initial_groups:
+        for chain in deepcopy(initial_groups):
             num_vital = 0
             for region in enclosed_regions:
                 if vital(chain, board, region):
