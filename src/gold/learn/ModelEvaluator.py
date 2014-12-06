@@ -1,8 +1,10 @@
 from gold.learn.Model import ModelBuilder
+import time
 
 class ModelEvaluator():
   def __init__(self,outputFile,trainingFiles,testFiles,labels):
-    fout=open(outputFile, 'w')
+    start = time.clock()
+    fout=open(outputFile, 'a')
     fout.write("Model,Precision,Recall,F-Measure,Accuracy")
     fout.write("\n")
     for x in range(0,len(trainingFiles)):
@@ -18,6 +20,9 @@ class ModelEvaluator():
               fout.write("\n")
 
     fout.close()
+    end = time.clock()
+    intvl = end - start
+    print('Evaluation took %.03f seconds' %intvl)
 
   def testModel(self,trainingFile,testFile,numRuns,downsample,scale,pca,model,label):
     precision = 0
@@ -92,13 +97,16 @@ class ModelEvaluator():
       elif model == 2:
         temp.buildModelLogReg("model.txt")
       elif model == 3:
-        temp.buildModelNeighbors("model.txt",201,20,3)
+        if downsample == 1:
+          temp.buildModelNeighbors("model.txt",201,20,3,6)
+        else:
+          temp.buildModelNeighbors("model.txt",101,25,3,6)
       elif model == 4:
         temp.buildModelNB("model.txt")
       elif model == 5:
         temp.buildModelSVM("model.txt")
       elif model == 6:
-        temp.buildModelRF("model.txt",201,20,3)
+        temp.buildModelRF("model.txt",201,20,3,6)
       elif model == 7:
         temp.buildModelAdaBoost("model.txt")
 
