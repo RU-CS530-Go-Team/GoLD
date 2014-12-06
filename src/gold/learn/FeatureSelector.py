@@ -61,10 +61,10 @@ class FeatureSelector():
     return self.selectFeaturesFromSubsetRecursive(list(range(self.instances.shape[1])),numFeatures)
 
   def selectFeaturesFromSubsetRecursive(self,subset,numFeatures):
-    model = svm.LinearSVC()
+    model = svm.LinearSVC(class_weights='auto')
     rfe = RFE(model, numFeatures)
     rfe = rfe.fit(self.instances[:,subset], self.classes)
     # summarize the selection of the attributes
-    print(rfe.get_support(indices=True))
-    print(rfe.ranking_)
+    # print(rfe.get_support(indices=True))
+    # print(rfe.ranking_)
     return rfe.get_support(indices=True)

@@ -6,6 +6,11 @@ from sklearn import preprocessing
 from sklearn import decomposition
 from sklearn import cross_validation
 from sklearn import grid_search
+from sklearn import lda
+from sklearn import qda
+from sklearn import linear_model
+from gold.learn.FeatureSelector import FeatureSelector
+from sklearn.feature_selection import RFE
 import numpy as np
 import pickle
 
@@ -18,7 +23,8 @@ class ModelBuilder():
     self.classes = np.array([])
     for dataFile in inputFiles:
       data = np.loadtxt(open(dataFile,"rb"),delimiter=",",skiprows=1)
-      instancesTemp = data[:,:data.shape[1]-2]
+      #instancesTemp = data[:,:data.shape[1]-2]
+      instancesTemp = data[:,:data.shape[1]-1]
       if classType == 0:
         classesTemp = data[:,data.shape[1]-2]
       elif classType == 1:
@@ -32,6 +38,29 @@ class ModelBuilder():
 
   def setFeatures(self,featureIndexList):
     self.instances = self.instances[:,featureIndexList]
+
+  def buildFeatureSelector(self,outputFile,numFeatures):
+    self.featureIndices = self.selectFeaturesFromSubsetRecursive(list(range(self.instances.shape[1])),numFeatures)
+    featureSelectionData = pickle.dumps(self.featureIndices)
+    f = open(outputFile,"w")
+    f.write(featureSelectionData)
+    f.close()
+
+  def setFeaturesFromSelector(self,featureSelectorFile):
+    f = open(featureSelectorFile)
+    featureSelectionData = f.read()
+    f.close()
+    self.featureIndices = pickle.loads(featureSelectionData)
+
+  def selectFeatures(self):
+    self.instances = self.instances[:,self.featureIndices]
+
+
+  def selectFeaturesFromSubsetRecursive(self,subset,numFeatures):
+    model = svm.LinearSVC(class_weight='auto')
+    rfe = RFE(model, numFeatures)
+    rfe = rfe.fit(self.instances[:,subset], self.classes)
+    return rfe.get_support(indices=True)
 
   def buildScaler(self,outputFile):
     #Scale to zero mean, unit standard deviation
@@ -99,8 +128,13 @@ class ModelBuilder():
     f.write(modelData)
     f.close()'''
 
-  def buildModelNeighbors(self,outputFile,numNeighbors):
-    classifier = neighbors.KNeighborsClassifier(numNeighbors)
+  def buildModelNeighbors(self,outputFile):
+    neighbor_range = np.arange(1,300,10)
+    param_grid = dict(n_neighbors = neighbor_range)
+    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=3)
+    grid = grid_search.GridSearchCV(neighbors.KNeighborsClassifier(), param_grid=param_grid, cv=cv, verbose=5)
+    grid.fit(self.instances, self.classes)
+    classifier = grid.best_estimator_
     classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
@@ -115,8 +149,45 @@ class ModelBuilder():
     f.write(modelData)
     f.close()
 
-  def buildModelRF(self,outputFile,numTrees):
-    classifier = ensemble.RandomForestClassifier(numTrees)
+  def buildModelRF(self,outputFile):
+    num_trees = np.arange(1,300,10)
+    param_grid = dict(n_estimators = num_trees)
+    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=3)
+    grid = grid_search.GridSearchCV(ensemble.RandomForestClassifier(), param_grid=param_grid, cv=cv, verbose=5)
+    grid.fit(self.instances, self.classes)
+    classifier = grid.best_estimator_
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
+
+  def buildModelLogReg(self,outputFile,weights='auto'):
+    classifier = linear_model.LogisticRegression(class_weights=weights)
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
+
+  def buildModelLDA(self,outputFile,priorProbs=[0.5,0.5]):
+    classifier = qda.QDA(priors=priorProbs)
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
+
+  def buildModelQDA(self,outputFile,priorProbs=[0.5,0.5]):
+    classifier = lda.LDA(priors=priorProbs)
+    classifier.fit(self.instances, self.classes)
+    modelData = pickle.dumps(classifier)
+    f = open(outputFile,"w")
+    f.write(modelData)
+    f.close()
+
+  def buildModelAdaBoost(self,outputFile):
+    classifier = ensemble.AdaBoostClassifier()
     classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
@@ -151,11 +222,11 @@ class ModelBuilder():
     return[precision, recall, fmeasure, accuracy]
 
 class Model():
-  # 0:SVM, 1:kNN, 2:NB, 3:RF
+  # 0:SVM, 1:Anything else
   def __init__(self,modelFile,modelType):
     self.setModel(modelFile,modelType)
 
-  # 0:SVM, 1:kNN, 2:NB, 3:RF
+  # 0:SVM, 1:Anything else
   def setModel(self,modelFile,modelType):
     f = open(modelFile)
     modelData = f.read()

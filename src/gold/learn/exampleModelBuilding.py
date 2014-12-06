@@ -15,12 +15,12 @@ classType = 0
 
 #SVM
 temp = ModelBuilder(["extraneous/games/train/featuresBtL.csv"],classType)
-temp.buildModelSVM("extraneous/games/train/modelSVMBtL.txt")
-temp.setData(["extraneous/games/dev/featuresBtL.csv"],classType)
+temp.buildModelSVM("extraneous/games/train/modelSVMBtL.txt", weights='auto')
+#temp.setData(["extraneous/games/dev/featuresBtL.csv"],classType)
 temp.evaluateModel("extraneous/games/train/modelSVMBtL.txt")
 temp = ModelBuilder(["extraneous/games/train/featuresWtK.csv"],classType)
 temp.buildModelSVM("extraneous/games/train/modelSVMWtK.txt")
-temp.setData(["extraneous/games/dev/featuresWtK.csv"],classType)
+#temp.setData(["extraneous/games/dev/featuresWtK.csv"],classType)
 temp.evaluateModel("extraneous/games/train/modelSVMWtK.txt")
 
 #Scale data and use SVM
