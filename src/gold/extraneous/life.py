@@ -26,6 +26,7 @@ def determineLife(board, color):
             if y == 0:
                 flood_fill(fill_board, (x_i, y_i), 0, start_color)
                 start_color += 1
+    #for x in fill_board: print x
     #Split up the filled groups into something that we can easily parse
     regions = {}
     for x_i, x in enumerate(fill_board):
@@ -65,11 +66,13 @@ def determineLife(board, color):
         modified = False
         for chain in deepcopy(initial_groups):
             num_vital = 0
+            #print chain
             for region in enclosed_regions:
                 if vital(chain, board, region):
+                    #print "Region is Vital"
                     num_vital += 1
             if num_vital < 2:
-                #print chain
+                #print "Removing"
                 initial_groups.remove(chain)
                 modified = True
         if not modified:
@@ -78,11 +81,15 @@ def determineLife(board, color):
         for region in groups_by_region.keys():
             cmodified = False    
             current_groups = groups_by_region[region]
+            #print "Current Groups"
+            #print current_groups, region
             for each_group in current_groups:
                 for each_stone in each_group:
-                    if any(each_stone not in looking_at_group for looking_at_group in initial_groups):
+                    if each_stone not in [x for z in initial_groups for x in z]:
+                        #print initial_groups, [x for z in initial_groups for x in z]
                         modified = True
                         cmodified = True
+                        #print "Removing Region"
                         del groups_by_region[region]
                         enclosed_regions.remove(regions[region])
                         break
