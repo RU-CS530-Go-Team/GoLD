@@ -11,6 +11,6 @@ from gold.features.Feature import Feature
 
 FEATURE_SERVICES = ['ColorFeature', 'StoneCountFeature', 'DiffLiberties', 'DistanceFromCenterFeature', 
                     'DistanceFromCenterFeature', 'numberLiveGroups', 'HuMomentsFeature',
-                    'LocalShapesFeature', 'PatchExtractor', 'SparseDictionaryFeature']
+                    'LocalShapesFeature', 'SparseDictionaryFeature']
 
 __all__ = FEATURE_SERVICES + ['Feature', 'FEATURE_SERVICES']
