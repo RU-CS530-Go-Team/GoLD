@@ -132,7 +132,6 @@ class Launcher:
             c.destroy()
         for [color,stones] in [['white', self.board.white_stones], ['black', self.board.black_stones]]:
             living_groups = determineLife(self.board, color)
-            #print living_groups
             self.C.delete(color)
             for stone in stones:
                 alive = False
@@ -152,6 +151,10 @@ class Launcher:
     ui.drawBoard()
     ui.mainloop()
     '''
+def load_problem_start(f):
+    mtp = MoveTreeParser(f)
+    return mtp.start
+
 def load_problem_solution(f):
     mtp = MoveTreeParser(f)
     #print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
@@ -176,6 +179,11 @@ def load_problem_solution(f):
             print('START NEW PATH (len={}; {})'.format(len(path),f.split('/')[-1]))
         move = None
         outcome = 0
+        liveWGr = determineLife(start, False)
+        liveBGr = determineLife(start, True)
+        w = len(liveWGr)
+        b = len(liveBGr)
+        print('START: w={}, b={}, nw={}, nb={}'.format(w,b,len(start.white_stones),len(start.black_stones)))
         for mid in path:
             move_dict = mtp.formatMove(mtp.moveID[mid])
             saysblack = move_dict['isBlack'] #move_str[0:1]=='B'
@@ -185,6 +193,8 @@ def load_problem_solution(f):
             move = start.clone()
             try:
                 move.place_stone(move_x, move_y, saysblack)
+                color = 'B' if saysblack else 'W'
+                print('{}({},{}): w={}, b={}, nw={}, nb={}'.format(color,move_x,move_y,w,b,len(move.white_stones),len(move.black_stones)))
                 if (parent, mid) not in movesConsidered:
                     #features = [probtyp]
                     outcome = 0
@@ -217,8 +227,9 @@ def load_problem_solution(f):
     return None
 
 if __name__ == '__main__':
+    print("Starting GoLD...")
     if len(sys.argv)>1:
-        solution = load_problem_solution(sys.argv[1])
+        solution = load_problem_start(sys.argv[1])
         ui = Launcher(380,380,50,19,board=solution)
     else:
         ui = Launcher(400,400,50,19)
