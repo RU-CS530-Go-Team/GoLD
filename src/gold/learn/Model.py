@@ -163,7 +163,7 @@ class ModelBuilder():
     f.close()
 
   def buildModelLogReg(self,outputFile,weights='auto'):
-    classifier = linear_model.LogisticRegression(class_weights=weights)
+    classifier = linear_model.LogisticRegression(class_weight=weights)
     classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
