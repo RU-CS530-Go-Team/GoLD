@@ -4,7 +4,7 @@ import time
 class ModelEvaluator():
   def __init__(self,outputFile,trainingFiles,testFiles,labels):
     start = time.clock()
-    fout=open(outputFile, 'a')
+    fout=open(outputFile, 'w')
     fout.write("Model,Precision,Recall,F-Measure,Accuracy")
     fout.write("\n")
     for x in range(0,len(trainingFiles)):
@@ -98,15 +98,15 @@ class ModelEvaluator():
         temp.buildModelLogReg("model.txt")
       elif model == 3:
         if downsample == 1:
-          temp.buildModelNeighbors("model.txt",201,20,3,6)
+          temp.buildModelNeighbors("model.txt",202,20,3,6)
         else:
-          temp.buildModelNeighbors("model.txt",101,25,3,6)
+          temp.buildModelNeighbors("model.txt",102,25,3,6)
       elif model == 4:
         temp.buildModelNB("model.txt")
       elif model == 5:
         temp.buildModelSVM("model.txt")
       elif model == 6:
-        temp.buildModelRF("model.txt",201,20,3,6)
+        temp.buildModelRF("model.txt",202,20,3,6)
       elif model == 7:
         temp.buildModelAdaBoost("model.txt")
 

@@ -213,11 +213,11 @@ class ModelBuilder():
     falseNegatives = len(np.intersect1d(positiveIndices[0][:],negativePredictiveIndices[0][:]))
     falsePositives = len(np.intersect1d(negativeIndices[0][:],positivePredictiveIndices[0][:]))
 
-    precision = float(truePositives) / (float(truePositives) + float(falsePositives))
+    precision = float(truePositives) / (float(truePositives) + float(falsePositives) + 0.000001)
 
-    recall = float(truePositives) / (float(truePositives) + float(falseNegatives))
+    recall = float(truePositives) / (float(truePositives) + float(falseNegatives) + 0.000001)
 
-    fmeasure = 2*(precision*recall) / (precision + recall)
+    fmeasure = 2*(precision*recall) / (precision + recall + 0.000001)
 
     return[precision, recall, fmeasure, accuracy]
 
