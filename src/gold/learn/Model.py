@@ -55,10 +55,9 @@ class ModelBuilder():
   def selectFeatures(self):
     self.instances = self.instances[:,self.featureIndices]
 
-
   def selectFeaturesFromSubsetRecursive(self,subset,numFeatures):
     model = svm.LinearSVC(class_weight='auto')
-    rfe = RFE(model, numFeatures)
+    rfe = RFE(model, numFeatures, verbose = 5)
     rfe = rfe.fit(self.instances[:,subset], self.classes)
     return rfe.get_support(indices=True)
 
@@ -251,6 +250,15 @@ class Model():
 
   def reduceDimensions(self):
     self.instances = self.pca.transform(self.instances)
+
+  def setFeaturesFromSelector(self,featureSelectorFile):
+    f = open(featureSelectorFile)
+    featureSelectionData = f.read()
+    f.close()
+    self.featureIndices = pickle.loads(featureSelectionData)
+
+  def selectFeatures(self):
+    self.instances = self.instances[:,self.featureIndices]
 
   def classify(self,instance):
     predictions = self.classifier.predict(instance)
