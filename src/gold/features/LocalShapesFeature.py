@@ -183,7 +183,7 @@ class LocalShapesSelector():
 
 class LocalShapesFeature(Feature):
 
-  def calculate_feature(self, dataDir='features/'):
+  def calculate_feature(self, dataDir=None):
     '''startBoard = self.convert_board(self.start,0)'''
     startBoard1 = self.convert_board(self.start,1)
     startBoard2 = self.convert_board(self.start,-1)
@@ -192,6 +192,10 @@ class LocalShapesFeature(Feature):
     moveBoard1 = self.convert_board(self.move,1)
     moveBoard2 = self.convert_board(self.move,-1)
 
+    if dataDir==None:
+      dataDir = self.dataDir
+    else:
+      self.dataDir = dataDir
 
     '''print startBoard'''
 
@@ -218,7 +222,7 @@ class LocalShapesFeature(Feature):
 
     model = None
 
-    if self.isBlack:
+    if self.isblack:
       model = Model(dataDir+"localShapeModelBtL.txt",0)
     else:
       model = Model(dataDir+"localShapeModelWtK.txt",0)
