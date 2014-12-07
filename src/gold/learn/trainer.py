@@ -129,7 +129,41 @@ class MoveTrainer():
             end = time.clock()
             intvl = end - start
             print('Feature extraction took %.03f seconds' %intvl)
-
+    
+''' merge csv2 into csv1 '''
+def merge_csv(csv1, csv2, csv3=None):
+    if csv3 == None:
+        csv3 = csv1
+    rows = []
+    with open(csv1, 'r') as csvf1, open(csv2, 'r') as csvf2:
+        rdr1 = csv.DictReader(csvf1)
+        rdr2 = csv.DictReader(csvf2)
+        f2values = {}
+        headers = rdr1.fieldnames
+        for row in rdr2:
+            difficulty = row['_DI']
+            pt = row['_PT']
+            probid = row['_PROBID']
+            moveid = row['_MOVE']
+            key = '{}.{}.{}.{}'.format(difficulty,pt,probid,moveid)
+            f2values[key]=row
+        for row in rdr1: 
+            difficulty = row['_DI']
+            pt = row['_PT']
+            probid = row['_PROBID']
+            moveid= row['_MOVE']
+            key = '{}.{}.{}.{}'.format(difficulty,pt,probid,moveid)
+            if key in f2values.keys():
+                row.update(f2values.pop(key))
+                rows.append(row)
+            else:
+                print('{}: no match found in {}'.format(key, csv2))
+        for key in f2values.keys():
+            print('{}: no match found in {}'.format(key, csv1))
+        with open(csv3, 'w') as csvout:
+            wtr = csv.DictWriter(csvout, headers, lineterminator='\n')
+            wtr.writeheader()
+            wtr.writerows(rows)
 
 if __name__ == '__main__':
     MoveTrainer(sys.argv[1:]).train()

@@ -107,7 +107,7 @@ def test_problem(probfile, modelBtL, modelWtK):
     if isblack:
         mmt = MinMaxTree(move, True, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     else:
-        mmt = MinMaxTree(move, False, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
+        mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     while( move not in solutionStates and pathLength<2*longestPath):
         color = 'B' if isblack else 'W'
         mmt = mmt.decideNextMove()
