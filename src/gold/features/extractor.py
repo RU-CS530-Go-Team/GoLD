@@ -127,7 +127,6 @@ class FeatureExtractor():
                         outcome = row['_SOLUTION']
                     else:
                         outcome = '0'
-                # ?-to-?
                 else:
                     outcome = row['_SOLUTION']
 
@@ -143,7 +142,6 @@ class FeatureExtractor():
 
 if __name__ == '__main__':
     base = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/resplit/'
-
     fe = FeatureExtractor()
 
     csvfname = base + 'trainfeatures.csv'
