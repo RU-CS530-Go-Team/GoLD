@@ -79,7 +79,7 @@ def alive(current_group, board, color, depth):
                 checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))] = True
                 return True
         #return True
-    if depth > 5: return False
+    if depth > 10: return False
     max_X = max([x[0] for x in current_group]) +1
     max_Y = max([x[1] for x in current_group]) +1
     min_X = min([x[0] for x in current_group]) -1
