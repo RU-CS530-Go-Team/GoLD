@@ -69,6 +69,7 @@ def term_test(probfile, testResults=dict()):
     return testResults
 
 def test_problem(probfile, modelBtL, modelWtK):
+    print(probfile)
     mtp = MoveTreeParser(probfile)
     ss = mtp.getSolutionPaths()
     isblack = mtp.blackFirst != mtp.flipColors
@@ -78,6 +79,7 @@ def test_problem(probfile, modelBtL, modelWtK):
     print_move('start ({}x{})'.format(move.x, move.y), move)
     longestPath = 0
     isBtL = (mtp.problemType == 1 or mtp.problemType==3)
+    print(mtp.getProblemTypeDesc()+' - black={}, isBtL={}'.format(isblack, isBtL))
     for spath in ss:
         pathLength = 0
         move = mtp.start.clone()
@@ -102,16 +104,17 @@ def test_problem(probfile, modelBtL, modelWtK):
     move = mtp.start.clone()
     #b = len(determineLife(move,True))
     pathLength = 0
+    if isblack:
+        mmt = MinMaxTree(move, True, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
+    else:
+        mmt = MinMaxTree(move, False, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     while( move not in solutionStates and pathLength<2*longestPath):
-        if isblack:
-            mmt = MinMaxTree(move, True, isBtL, model=modelBtL)
-        else:
-            mmt = MinMaxTree(move, False, isBtL, model=modelWtK)
         color = 'B' if isblack else 'W'
-        nextMove = mmt.decideNextMove()
-        move.place_stone(nextMove.i, nextMove.j, isblack)
+        mmt = mmt.decideNextMove()
+        move.place_stone(mmt.i, mmt.j, isblack)
         #b = len(determineLife(move,True))
-        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move)
+        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move)
+        mmt.promote()
         if move in terminalIncorrectStates:
             raise 'Haha! You lose!'
         if move in solutionStates:
@@ -169,6 +172,9 @@ if __name__ == '__main__':
     numCorrect = 0
     numTotal = 0
     seed(1234567890)
+    if not os.path.isdir(problemDir):
+        test_problem(problemDir, modelBtL, modelWtK)
+        sys.exit()
     dirs = glob(problemDir+'/*')
     shuffle(dirs)
     for probdiff in dirs:
@@ -189,6 +195,17 @@ if __name__ == '__main__':
                 except Exception as e:
                     numTotal += 1
                     print(e)
+        else:
+            if probdiff[-3:]=='sgf':
+                try:
+                    test_problem(probdiff, modelBtL, modelWtK)
+                except UnspecifiedProblemType:
+                    x= 'UPT'
+                except IllegalMove as im:
+                    print(im)
+                except Exception as e:
+                    print(e)
+                    x = 'WHATEVER'
     print('{}/{} correct'.format(numCorrect, numTotal))
     '''
     for tpl in terms.keys():
