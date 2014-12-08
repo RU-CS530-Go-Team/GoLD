@@ -36,6 +36,14 @@ def determineLife(board, color):
                 regions[y].append((x_i, y_i))
             except:
                 regions[y] = [(x_i, y_i)]
+    groups_by_region = {}
+    for current_region in regions:
+        for current_group in initial_groups:
+            if StoneGrouper(stones).is_group_adjacent(current_group, regions[current_region]):
+                try:
+                    groups_by_region[current_region].append(current_group)
+                except:
+                    groups_by_region[current_region] = [current_group]
     #remove all places taken up by the other color of stones
     for current_region in regions:
         for check in other:
@@ -43,7 +51,6 @@ def determineLife(board, color):
                 regions[current_region].remove(check)
     #Determine which are enclosed by whatever color we're working on
     enclosed_regions = []
-    groups_by_region = {}
     for current_group in connected_groups:
         max_X = max([x[0] for x in current_group])# +1
         max_Y = max([x[1] for x in current_group])# +1
@@ -57,10 +64,11 @@ def determineLife(board, color):
         for current_region in regions:
             if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in regions[current_region]):
                 enclosed_regions.append(regions[current_region])
-                try:
-                    groups_by_region[current_region].append(current_group)
-                except:
-                    groups_by_region[current_region] = [current_group]
+                #try:
+                #    groups_by_region[current_region].append(current_group)
+                #except:
+                #    groups_by_region[current_region] = [current_group]
+
     #print enclosed_regions
     #print groups_by_region
     #Starting Benson's Algorithm
@@ -74,6 +82,7 @@ def determineLife(board, color):
             for region in enclosed_regions:
                 if vital(chain, board, region):
                     #print "Region is Vital"
+                    #print region
                     num_vital += 1
             if num_vital < 2:
                 #print "Removing"
@@ -82,6 +91,7 @@ def determineLife(board, color):
         if not modified:
             break
         modified = False
+        #print groups_by_region.keys()
         for region in groups_by_region.keys():
             cmodified = False    
             current_groups = groups_by_region[region]
@@ -95,7 +105,10 @@ def determineLife(board, color):
                         cmodified = True
                         #print "Removing Region"
                         del groups_by_region[region]
-                        enclosed_regions.remove(regions[region])
+                        try:
+                            enclosed_regions.remove(regions[region])
+                        except:
+                            a = 0
                         break
                 if cmodified: break
         if not modified: break
