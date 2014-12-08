@@ -26,7 +26,7 @@ class FeatureExtractor():
         f2x = ['ColorFeature'] + [h for h in headers if h[0]=='_']
         #globals_hash = globals()
         services = globals()['FEATURE_SERVICES']
-        for fs in services: 
+        for fs in services:
             if not fs in f2x:
                 if fs in headers:
                     sorted_headers.append(fs)
@@ -36,7 +36,7 @@ class FeatureExtractor():
                     sorted_headers.append('{}_{}'.format(fs,i))
                     i = i + 1
         return sorted_headers
-          
+
     def extract_features(self, start, move, movePosition, isblack):
         feature_services = self.init_feature_services(start, move, movePosition, isblack)
         features = dict()
@@ -55,7 +55,7 @@ class FeatureExtractor():
                     if( type(v)==ndarray ):
                         for j,vv in enumerate(v):
                             features['{}_{}_{}'.format(fe.name(),i+1,j+1)] = vv
-                    else:        
+                    else:
                         features['{}_{}'.format(fe.name(),i+1)] = v
             else:
                 raise Exception('{}: Unexpected type {}'.format(fk,fvtype))
@@ -68,7 +68,7 @@ class FeatureExtractor():
             newcsvname = csvfname+'.t'+probDesc
         with open(csvfname, 'r') as csvfile, open(newcsvname,'w') as csvout:
             rdr = csv.DictReader(csvfile)
-      
+
             headers = FeatureExtractor().sort_headers(rdr.fieldnames)
             wtr = csv.DictWriter(csvout, fieldnames=headers+['OUTCOME'], lineterminator='\n')
             wtr.writeheader()
@@ -79,16 +79,16 @@ class FeatureExtractor():
                     # Black-to-live; move for black
                     if probtyp==1:
                         if row['ColorFeature']=='1':
-                            outcome = int(row['_SOLUTION'])*int(row['_TERM']) 
+                            outcome = int(row['_SOLUTION'])*int(row['_TERM'])
                         else:
                             outcome = '0'
                     # White-to-kill
                     elif probtyp==2:
                         if row['ColorFeature']=='0':
-                            outcome = int(row['_SOLUTION'])*int(row['_TERM']) 
+                            outcome = int(row['_SOLUTION'])*int(row['_TERM'])
                         else:
                             outcome = '0'
-                    # ?-to-? 
+                    # ?-to-?
                     else:
                         outcome = int(row['_SOLUTION'])*int(row['_TERM'])
 
@@ -98,14 +98,14 @@ class FeatureExtractor():
                     elif(outcome != row['OUTCOME']):
                         raise ValueError('{}.{}.{}: Outcomes don''t match.'.format(row['_DI'],row['_PROBID'],row['_MOVE']))
                     wtr.writerow(newrow)
-        return newcsvname    
-    
+        return newcsvname
+
     def split_csv_by_probtype(self, csvfname, btlcsv, wtkcsv):
         #newcsvname = csvfname+'.'+str(probtyp)
         with open(csvfname, 'r') as csvfile, open(btlcsv,'w') as btlout, \
             open(wtkcsv,'w') as wtkout:
             rdr = csv.DictReader(csvfile)
-      
+
             headers = FeatureExtractor().sort_headers(rdr.fieldnames)
             bwtr = csv.DictWriter(btlout, fieldnames=headers+['OUTCOME'], lineterminator='\n')
             bwtr.writeheader()
@@ -118,7 +118,7 @@ class FeatureExtractor():
                 # Black-to-live; move for black
                 if pt==1:
                     if row['ColorFeature']=='1':
-                        outcome = row['_SOLUTION'] 
+                        outcome = row['_SOLUTION']
                     else:
                         outcome = '0'
                 # White-to-kill
@@ -127,7 +127,6 @@ class FeatureExtractor():
                         outcome = row['_SOLUTION']
                     else:
                         outcome = '0'
-                # ?-to-? 
                 else:
                     outcome = row['_SOLUTION']
 
@@ -143,9 +142,8 @@ class FeatureExtractor():
 
 if __name__ == '__main__':
     base = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/merge/'
-    
     fe = FeatureExtractor()
-    '''
+
     csvfname = base + 'trainfeatures.csv'
     newcsvname = base + 'trainfeaturesBtL_T.csv'
     fe.convert_csv_for_terminal_test(csvfname, 1, newcsvname)
@@ -153,15 +151,13 @@ if __name__ == '__main__':
     fe.convert_csv_for_terminal_test(csvfname, 2, newcsvname)
     btlcsvname = base + 'trainfeaturesBtL.csv'
     wtkcsvname = base + 'trainfeaturesWtK.csv'
-    #fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)
+    fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)
     
-    '''
     csvfname = base+'devfeatures.csv'
     btlcsvname = base+'devfeaturesBtL_T.csv'
     fe.convert_csv_for_terminal_test(csvfname, 1, btlcsvname)
     wtkcsvname = base+'devfeaturesWtK_T.csv'
     fe.convert_csv_for_terminal_test(csvfname, 2, wtkcsvname)
-    
     btlcsvname = base + 'devfeaturesBtL.csv'
     wtkcsvname = base + 'devfeaturesWtK.csv'
     fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)
