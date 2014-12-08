@@ -14,7 +14,7 @@ BEAMSIZE = 3
 class MinMaxTree:
     '''
     classdocs
-    
+
     print('Loading model and scaler files...')
     modelFile = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/resplit/trainFeaturesBtl.csv.rf'
     modelType = 3
@@ -44,7 +44,7 @@ class MinMaxTree:
             #eggs = []
             self.extend_tree()
 
-    
+
     def extend_tree(self):
         validMoves = self.find_valid_moves()
         probs = [x['prob'] for x in validMoves]
@@ -98,9 +98,9 @@ class MinMaxTree:
             model = self.whiteModel
         instance = model.scale(data)
         prediction = model.getScoreCorrect(instance)
-        
+
         if self.isMinLayer:
-            return 1.0-prediction
+            return prediction
         return prediction
 
     def isNearStones(self, i, j, isblack):
@@ -133,12 +133,12 @@ class MinMaxTree:
         self.value = best.value
         #print('best: {}={}'.format(best.moveseries, best.value))
         return best
-    
-    
+
+
     def promote(self, newlevel=0):
-        ''' Changes level of node to higher in the tree. 
-            Default level is 0, making self the new root. 
-            If newlevel is less than current level, recursively 
+        ''' Changes level of node to higher in the tree.
+            Default level is 0, making self the new root.
+            If newlevel is less than current level, recursively
             extends tree to MAXDEPTH
         '''
         if newlevel>self.level:
