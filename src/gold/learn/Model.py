@@ -107,8 +107,8 @@ class ModelBuilder():
     temp = self.instances[correctIndices,:]
     temp = np.concatenate((temp,self.instances[incorrectIndices,:]),axis=0)
     self.instances = temp
-    temp = self.classes[correctIndices,:]
-    temp = np.concatenate((temp,self.classes[incorrectIndices,:]),axis=0)
+    temp = self.classes[correctIndices][:]
+    temp = np.concatenate((temp,self.classes[incorrectIndices][:]),axis=0)
     self.classes = temp
 
   def buildModelSVM(self,outputFile,weights='auto'):
