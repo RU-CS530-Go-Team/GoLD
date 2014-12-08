@@ -45,10 +45,14 @@ def determineLife(board, color):
     enclosed_regions = []
     groups_by_region = {}
     for current_group in connected_groups:
-        max_X = max([x[0] for x in current_group]) +1
-        max_Y = max([x[1] for x in current_group]) +1
-        min_X = min([x[0] for x in current_group]) -1
-        min_Y = min([x[1] for x in current_group]) -1
+        max_X = max([x[0] for x in current_group])# +1
+        max_Y = max([x[1] for x in current_group])# +1
+        min_X = min([x[0] for x in current_group])# -1
+        min_Y = min([x[1] for x in current_group])# -1
+        if min_X == 0: min_X = min_X - 1
+        if min_Y == 0: min_Y = min_Y - 1
+        if max_X == board.x - 1: max_X = board.x
+        if max_Y == board.y - 1: max_Y = board.y
         
         for current_region in regions:
             if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in regions[current_region]):
@@ -93,7 +97,7 @@ def determineLife(board, color):
                         del groups_by_region[region]
                         enclosed_regions.remove(regions[region])
                         break
-                if cmodified: break
+                #if cmodified: break
         if not modified: break
     return initial_groups
     
