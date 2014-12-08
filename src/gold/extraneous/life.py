@@ -97,7 +97,7 @@ def determineLife(board, color):
                         del groups_by_region[region]
                         enclosed_regions.remove(regions[region])
                         break
-                #if cmodified: break
+                if cmodified: break
         if not modified: break
     return initial_groups
     
