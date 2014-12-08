@@ -100,7 +100,7 @@ class MinMaxTree:
         prediction = model.getScoreCorrect(instance)
 
         if self.isMinLayer:
-            return prediction
+            return 1.0-prediction
         return prediction
 
     def isNearStones(self, i, j, isblack):
