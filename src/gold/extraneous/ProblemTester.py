@@ -31,9 +31,7 @@ def print_move(label, move):
     wb = 0#len(aliveBGr)
     print('{}: w={}, b={}, wa={}, wb={}, nw={}, nb={}'.format(label,w,b,wa,wb,len(move.white_stones),len(move.black_stones)))
 
-def test_problem(probfile, modelBtL, modelWtK):
-    print(probfile)
-    mtp = MoveTreeParser(probfile)
+def get_terminal_states(mtp):
     ss = mtp.getSolutionPaths()
     isblack = mtp.blackFirst != mtp.flipColors
     move = mtp.start.clone()
@@ -43,7 +41,6 @@ def test_problem(probfile, modelBtL, modelWtK):
     longestPath = 0
     isBtL = (mtp.problemType == 1 or mtp.problemType==3)
     print(mtp.getProblemTypeDesc()+' - black={}, isBtL={}'.format(isblack, isBtL))
-    sb = len(determineLife(mtp.start, True))
     print('SOLUTIONS:')
     for spath in ss:
         pathLength = 0
@@ -65,14 +62,23 @@ def test_problem(probfile, modelBtL, modelWtK):
                     terminalIncorrectStates.add(move.clone())
 
         print('------------')
+    return [solutionStates, terminalIncorrectStates, longestPath]
+
+def test_problem(probfile, modelBtL, modelWtK):
+    print(probfile)
+    mtp = MoveTreeParser(probfile)
+    [solutionStates, terminalIncorrectStates, longestPath] = get_terminal_states(mtp)
 
     move = mtp.start.clone()
-    #b = len(determineLife(move,True))
+    sb = len(determineLife(mtp.start, True))
     pathLength = 0
+    isblack = mtp.blackFirst != mtp.flipColors
+    isBtL = (mtp.problemType == 1 or mtp.problemType==3)
     if isblack:
         mmt = MinMaxTree(move, True, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     else:
         mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
+    print('GOLD:')
     while( move not in solutionStates and pathLength<2*longestPath):
         color = 'B' if isblack else 'W'
         mmt = mmt.decideNextMove()
