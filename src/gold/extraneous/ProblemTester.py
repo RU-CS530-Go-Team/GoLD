@@ -7,6 +7,7 @@ from gold.extraneous.MoveTreeParser import MoveTreeParser,\
     UnspecifiedProblemType
 from gold.models.board import Board, IllegalMove
 from random import seed, shuffle
+import csv
 import sys
 import os
 from gold.learn.trainer import FeatureExtractor
@@ -33,9 +34,9 @@ def print_move(label, move):
 '''
 def term_test(probfile, testResults=dict()):
     mtp = MoveTreeParser(probfile)
-    ss = mtp.getSolutionPaths()
+    ss = mtp.getAllPaths()
     move = mtp.start.clone()
-    print_move('start ({}x{})'.format(move.x, move.y), move)
+    #print_move('start ({}x{})'.format(move.x, move.y), move)
     isBtL = (mtp.problemType == 1 or mtp.problemType==3)
     pt = 1 if isBtL else 2
     testResults['PT'] = pt
@@ -61,7 +62,7 @@ def term_test(probfile, testResults=dict()):
             term = 1 if step in mtp.getTerminalStates() else 0
             bdiff = b-sb
             wdiff = w-sw    
-            tpl = (pt, sol, term, bdiff, wdiff)
+            tpl = (pt, sol, term, b, w)
             if tpl in testResults.keys():
                 testResults[tpl] = testResults[tpl]+1
             else:
@@ -158,7 +159,8 @@ if __name__ == '__main__':
         print('Usage: python ProblemTester <model_dir> <problem_dir>')
         sys.exit()
     modelDir = sys.argv[1]
-    problemDir = sys.argv[2]
+    problemDirs = sys.argv[2:]
+    print(problemDirs)
     modelFile = modelDir+'/modelRF100BtL.txt'
     modelType = 3 
     scalerFile = modelDir+'/trainfeaturesBtLScaler.txt'
@@ -168,53 +170,69 @@ if __name__ == '__main__':
     scalerFile = modelDir+'/trainfeaturesWtKScaler.txt'
     modelWtK = load_model(modelFile, modelType, scalerFile)
     #test_problem(sys.argv[1], modelBtL, modelWtK)
+
     terms = dict()
-    numCorrect = 0
-    numTotal = 0
     seed(1234567890)
-    if not os.path.isdir(problemDir):
-        test_problem(problemDir, modelBtL, modelWtK)
-        sys.exit()
-    dirs = glob(problemDir+'/*')
-    shuffle(dirs)
-    for probdiff in dirs:
-        if os.path.isdir(probdiff):
-            files = glob(probdiff+'/*.sgf')
-            for probfile in files:
-                
-                print(probfile)
-                try:
-                    #terms = term_test(probfile, terms)
-                    #terms = term_test(probfile, terms)
-                    test_problem(probfile, modelBtL, modelWtK)
-                    numCorrect += 1
-                except UnspecifiedProblemType:
-                    x= 'UPT'
-                except IllegalMove as im:
-                    print(im)
-                except Exception as e:
-                    numTotal += 1
-                    print(e)
-        else:
-            if probdiff[-3:]=='sgf':
-                try:
-                    test_problem(probdiff, modelBtL, modelWtK)
-                except UnspecifiedProblemType:
-                    x= 'UPT'
-                except IllegalMove as im:
-                    print(im)
-                except Exception as e:
-                    print(e)
-                    x = 'WHATEVER'
-    print('{}/{} correct'.format(numCorrect, numTotal))
-    '''
+    totalNumCorrect = 0
+    totalTotal = 0
+    for problemDir in problemDirs:
+        numCorrect = 0
+        numTotal = 0
+        if not os.path.isdir(problemDir):
+            if len(problemDir)<3:
+                print('Not a dir or problem file: {}'.format(problemDir))
+            elif problemDir[-3]=='sgf':
+                test_problem(problemDir, modelBtL, modelWtK)
+                #terms = term_test(problemDir, terms)
+            else:
+                print('Not a dir or problem file: {}'.format(problemDir))
+            sys.exit()
+        dirs = glob(problemDir+'/*')
+        shuffle(dirs)
+        for probdiff in dirs:
+            if os.path.isdir(probdiff):
+                files = glob(probdiff+'/*.sgf')
+                for probfile in files:
+                    
+                    print(probfile)
+                    try:
+                        #terms = term_test(probfile, terms)
+                        test_problem(probfile, modelBtL, modelWtK)
+                        numCorrect += 1
+                        numTotal += 1
+                    except UnspecifiedProblemType:
+                        x= 'UPT'
+                    except IllegalMove as im:
+                        print(im)
+                    except Exception as e:
+                        numTotal += 1
+                        print(e)
+            else:
+                if probdiff[-3:]=='sgf':
+                    try:
+                        #terms = term_test(probfile, terms)
+                        test_problem(probdiff, modelBtL, modelWtK)
+                        numCorrect += 1
+                        numTotal += 1
+                    except UnspecifiedProblemType:
+                        x= 'UPT'
+                    except IllegalMove as im:
+                        print(im)
+                    except Exception as e:
+                        print(e)
+                        x = 'WHATEVER'
+        totalNumCorrect+=numCorrect
+        totalTotal+=numTotal
+        print('{}/{} correct'.format(numCorrect, numTotal))
+    print('{}/{} correct'.format(totalNumCorrect, totalTotal))
+'''
     for tpl in terms.keys():
         try:
             [pt,sol,term,nb,nw] = tpl
             print('pt={},sol={},term={},nb={},nw={},count={}'.format(pt,sol,term,nb,nw,terms[tpl]))
         except ValueError:
             x = 'VER'
-    '''
+'''
     #test_problem('C:/Users/jblackmore/Documents/Development/Rutgers/GoLD/problems/resplit/train/2k/17324.sgf', modelBtL, None)
     #test_problem('C:/Users/jblackmore/Documents/Development/Rutgers/GoLD/problems/resplit/train/25k/3052.sgf')
     #test_problem('C:/Users/jblackmore/Documents/Development/Rutgers/GoLD/problems/resplit/train/25k/8177.sgf')
