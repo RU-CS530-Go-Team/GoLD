@@ -82,8 +82,8 @@ class MinMaxTree:
                         #mvstr = '%.03f' %mval
                         #print('{} = {}'.format(ms, mvstr))
                         validMoves.append({'board': move, 'prob': mval, 'ms': ms, 'x': i, 'y': j})
-                    except IllegalMove as im:
-                        print(im)
+                    except IllegalMove:
+                        pass
         return validMoves
 
     def evaluateMove(self, move, i, j, isblack):
