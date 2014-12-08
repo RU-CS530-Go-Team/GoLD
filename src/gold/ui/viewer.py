@@ -32,7 +32,7 @@ def probfile_move_to_board_state(probfile, moveid):
                 move.place_stone(fm['x'], fm['y'], fm['isBlack'])
                 if step==moveid:
                     return move
-    raise Exception('{}: Move id {} not found in problem file.', probfile, moveid) 
+    raise Exception('{}: Move id {} not found in problem file.'.format(probfile, moveid)) 
 
 def get_moves_black_increasing_incorrect(probfile):
     mtp = MoveTreeParser(probfile)
@@ -106,7 +106,8 @@ def view_problems(file_list):
             try:
                 bad_moves = get_moves_black_increasing_incorrect(f)
                 for bad_move in bad_moves:
-                    board = probfile_move_to_board_state(f, bad_move)
+                    [moveid, x, y, isblack] = bad_move
+                    board = probfile_move_to_board_state(f, moveid)
                     ui = Launcher(400, 400, 50, max(board.x, board.y), board)
                     ui.drawBoard()
                     ui.mainloop()
@@ -122,7 +123,7 @@ def view_problems(file_list):
 
 if __name__ == '__main__':
     if len(sys.argv)<2:
-        print('Usage: python viewer.py <prob_file> <move_id>')
+        print('Usage: python viewer.py <prob_file_or_dir>')
     probfiles = sys.argv[1:]
     view_problems(probfiles)
     
