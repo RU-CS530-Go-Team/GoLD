@@ -60,7 +60,7 @@ class MinMaxTree:
     def terminal_test(self, move, i, j, isblack):
         sb = len(determineLife(self.board, True))
         b = len(determineLife(move, True))
-        if (sb-b)>0:
+        if (b-sb)>0:
             # black lives
             return 1
         return 0
