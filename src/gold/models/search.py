@@ -6,22 +6,17 @@ Created on Nov 1, 2014
 from gold.models.board import Board, StoneGrouper, IllegalMove
 from gold.learn.trainer import FeatureExtractor
 from gold.learn.Model import Model
+from gold.extraneous.life import determineLife
+
 import numpy as np
 from StringIO import StringIO
 
 MAXDEPTH = 1
-BEAMSIZE = 3
+BEAMSIZE = 1
 class MinMaxTree:
     '''
     classdocs
     
-    print('Loading model and scaler files...')
-    modelFile = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/resplit/trainFeaturesBtl.csv.rf'
-    modelType = 3
-    model = Model(modelFile, modelType)
-    scalerFile = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/resplit/trainFeaturesBtl.csv.scl'
-    model.setScaler(scalerFile)
-    print('Model and scaler files ready!')
     '''
     def __init__(self, start, isblack, isMinLayer, blackModel=None, whiteModel=None, level=0, value=0.0, moveseries=''):
         '''
@@ -53,16 +48,24 @@ class MinMaxTree:
             threshold = sorted(probs)[beam]
         else:
             threshold = sorted(probs)[-beam]
-        print('Threshold = {}'.format(threshold))
+        #print('Threshold = {}'.format(threshold))
         for vm in validMoves:
             if (vm['prob']<threshold) == self.isMinLayer or vm['prob']==threshold:
                 mvstr = '%.03f' %vm['prob']
-                print('  {} = {}'.format(vm['ms'], mvstr))
+                #print('  {} = {}'.format(vm['ms'], mvstr))
                 child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, blackModel=self.blackModel, whiteModel=self.whiteModel, level=self.level+1, value=vm['prob'], moveseries=vm['ms'])
                 child.i = vm['x']
                 child.j = vm['y']
                 self.children.append(child)
 
+    def terminal_test(self, move, i, j, isblack):
+        sb = len(determineLife(self.board, True))
+        b = len(determineLife(move, True))
+        if (sb-b)>0:
+            # black lives
+            return 1
+        return 0
+    
     def find_valid_moves(self):
         all_stones = self.board.white_stones+self.board.black_stones
         validMoves = []
@@ -85,6 +88,28 @@ class MinMaxTree:
         return validMoves
 
     def evaluateMove(self, move, i, j, isblack):
+        term_test = self.terminal_test(move, i, j, isblack)
+        if term_test==1:
+            # Black lives
+            if isblack:
+                if self.isMinLayer:
+                    return 0
+                return 1
+            else:
+                if self.isMinLayer:
+                    return 1
+                return 0
+        if term_test==-1:
+            # White kills
+            if isblack:
+                if self.isMinLayer:
+                    return 1
+                return 0
+            else:
+                if self.isMinLayer:
+                    return 0
+                return 1
+        
         fe = FeatureExtractor()
         features = fe.extract_features(self.board, move, (i,j), isblack)
         headers = fe.sort_headers(features.keys())
