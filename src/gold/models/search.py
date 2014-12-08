@@ -40,6 +40,9 @@ class MinMaxTree:
 
 
     def extend_tree(self):
+        if self.value==2.0 or self.value<0.0:
+            print('{}: Cutting off search, terminal state found'.format(self.moveseries, self.value))
+            return self
         validMoves = self.find_valid_moves()
         probs = [x['prob'] for x in validMoves]
         beam = min(len(probs)-1, BEAMSIZE)
@@ -56,13 +59,15 @@ class MinMaxTree:
                 child.i = vm['x']
                 child.j = vm['y']
                 self.children.append(child)
-
+        return self
+    
     def terminal_test(self, move, i, j, isblack):
         sb = len(determineLife(self.board, True))
         b = len(determineLife(move, True))
         if (b-sb)>0:
             # black lives
-            return 1
+            print('{}: Black lives!'.format(self.moveseries))
+            return 2
         return 0
     
     def find_valid_moves(self):
@@ -88,26 +93,26 @@ class MinMaxTree:
 
     def evaluateMove(self, move, i, j, isblack):
         term_test = self.terminal_test(move, i, j, isblack)
-        if term_test==1:
+        if term_test==2:
             # Black lives
             if isblack:
                 if self.isMinLayer:
-                    return 0
-                return 1
+                    return -1
+                return 2
             else:
                 if self.isMinLayer:
-                    return 1
-                return 0
+                    return 2
+                return -1
         if term_test==-1:
             # White kills
             if isblack:
                 if self.isMinLayer:
-                    return 1
-                return 0
+                    return 2
+                return -1
             else:
                 if self.isMinLayer:
-                    return 0
-                return 1
+                    return -1
+                return 2
         
         fe = FeatureExtractor()
         features = fe.extract_features(self.board, move, (i,j), isblack)
@@ -178,4 +183,6 @@ class MinMaxTree:
 
     def decideNextMove(self):
         c = self.bestChild()
+        if c==self:
+            return None
         return c
