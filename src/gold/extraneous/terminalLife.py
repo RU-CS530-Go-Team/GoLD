@@ -102,7 +102,7 @@ def alive(current_group, board, color, depth, maxdepth=10):
                             current_board_2.place_stone(x1, y1, color)
                             #print current_board_2
                             #print depth
-                            if alive(current_group, current_board_2, color, depth + 1):
+                            if alive(current_group, current_board_2, color, depth + 1, maxdepth):
                                 #print "Alive"
                                 #print current_board_2
                                 #raw_input()
