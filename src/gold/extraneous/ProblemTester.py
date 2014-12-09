@@ -3,15 +3,17 @@ Created on Nov 28, 2014
 
 @author: JBlackmore
 '''
-from gold.extraneous.MoveTreeParser import MoveTreeParser,\
-    UnspecifiedProblemType
-from gold.models.board import IllegalMove
-from random import seed, shuffle
 import sys
 import time
 import os
 import csv
-from gold.models.search import MinMaxTree
+import argparse
+
+from gold.extraneous.MoveTreeParser import MoveTreeParser,\
+    UnspecifiedProblemType
+from gold.models.board import IllegalMove
+from random import seed, shuffle
+from gold.models.search import MinMaxTree, set_max_depth
 from gold.extraneous.life import determineLife
 from gold.extraneous.terminalLife import findAliveGroups
 from gold.learn.Model import Model
@@ -204,20 +206,25 @@ def load_model(modelFile, modelType, scalerFile):
     print('Model and scaler files ready!')
     return model
 
-def test_problems(modelBtl, modelWtK, probdirs, outputfile):
+def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdepth=3):
     
     #test_problem(sys.argv[1], modelBtL, modelWtK)
+    set_max_depth(maxdepth)
     problemsDone = set()
-    try:
-        with open(outputfile, 'r') as csvin: 
-            rdr = csv.reader(csvin)
-            for row in rdr:
-                problemsDone.add(row[0])
-    except Exception:
+    if not rerun:
+        try:
+            with open(outputfile, 'r') as csvin: 
+                rdr = csv.reader(csvin)
+                for row in rdr:
+                    problemsDone.add(row[0])
+        except Exception:
+            with open(outputfile, 'w') as fout:
+                fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
+
+    else:
         with open(outputfile, 'w') as fout:
             fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
-
-    
+        
     with open(outputfile, 'a') as fout:
         seed(1234567890)
         totalNumCorrect = 0
@@ -273,13 +280,31 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile):
     
 
 if __name__ == '__main__':
-    if len(sys.argv)<3:
-        print('Usage: python ProblemTester <model_dir> <problem_dir_or_file1> [problem_dir_or_file2...]')
-        sys.exit()
+    
+    parser = argparse.ArgumentParser(description="", conflict_handler='resolve', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # rerun problems, 
+    parser.add_argument('--rerun_problems', '-r', action='store_true', help='rerun problems already run')
+    parser.add_argument('--max_depth', '-d', default='3', metavar='int', type=int, choices=[x+1 for x in range(5)], help='maximum depth to search for the next move')
+    parser.add_argument('model_dir', help='location of machine learning models')
+    parser.add_argument('problem_dir_or_file', nargs='+', help='path to problem directory or file')
+    '''
+    parser.add_argument('json_file', help='json file with data for PPI forms to make predictions about', type=str)
+    parser.add_argument('--specificity_model_file', help='stored specificity model', type=str, default=None, required=True)
+    parser.add_argument('--ratings_model_file', help='stored ratings model', type=str, default=None, required=True)
+    parser.add_argument('--sentiment_model_file', help='stored sentiment model', type=str, default=None, required=True)
+    parser.add_argument('--n_jobs', help='number of parallel jobs for grid search', type=int, default=1)
+        
+    # load the models and args used to create them
+    with open(args.specificity_model_file, 'rb') as f:
+        specificity_clf, saved_args_specificity = pickle.load(f)
+    with open(args.ratings_model_file, 'rb') as f:
+    '''
+    args = parser.parse_args()
+    #if args.rerun_problems:
     
     # Sample main... make your own if you want something different
     # Just import load_model and test_problems
-    modelDir = sys.argv[1]
+    modelDir = args.model_dir
     #modelFile = modelDir+'/modelNBBtL.txt'
     modelFile = modelDir+'/modelRF100BtL.txt'
     modelType = 3 
@@ -290,8 +315,8 @@ if __name__ == '__main__':
     modelType = 3
     scalerFile = modelDir+'/trainfeaturesWtKScaler.txt'
     modelWtK = load_model(modelFile, modelType, scalerFile)
-    problemDirs = sys.argv[2:]
+    problemDirs = args.problem_dir_or_file
 
     outputfile = modelDir+'/problem-test-results.txt'
-    test_problems(modelBtL, modelWtK, problemDirs, outputfile)
+    test_problems(modelBtL, modelWtK, problemDirs, outputfile, rerun=args.rerun_problems, maxdepth=args.max_depth)
     
