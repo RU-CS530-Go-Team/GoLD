@@ -172,6 +172,8 @@ def call_test_problem(probfile, modelBtL, modelWtK, fout=None):
         try:
             mtp = MoveTreeParser(probfile) 
             isBtL = (mtp.problemType == 1 or mtp.problemType==3)
+            if not isBtL:
+                return -1
             problemType = 'black-to-live' if isBtL else 'white-to-kill'
             print probfile
             test_problem(mtp, modelBtL, modelWtK)
@@ -264,11 +266,13 @@ if __name__ == '__main__':
     # Sample main... make your own if you want something different
     # Just import load_model and test_problems
     modelDir = sys.argv[1]
-    modelFile = modelDir+'/modelNBBtL.txt'
+    #modelFile = modelDir+'/modelNBBtL.txt'
+    modelFile = modelDir+'/modelRF100BtL.txt'
     modelType = 3 
     scalerFile = modelDir+'/trainfeaturesBtLScaler.txt'
     modelBtL = load_model(modelFile, modelType, scalerFile)
-    modelFile = modelDir+'/modelNBWtK.txt'
+    #modelFile = modelDir+'/modelNBWtK.txt'
+    modelFile = modelDir+'/modelRF100WtK.txt'
     modelType = 3
     scalerFile = modelDir+'/trainfeaturesWtKScaler.txt'
     modelWtK = load_model(modelFile, modelType, scalerFile)
