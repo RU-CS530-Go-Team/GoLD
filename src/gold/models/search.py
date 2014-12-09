@@ -8,16 +8,22 @@ from gold.learn.trainer import FeatureExtractor
 from gold.learn.Model import Model
 from gold.extraneous.life import determineLife
 
+import time
 import numpy as np
 from StringIO import StringIO
 
-MAXDEPTH = 1
+MAXDEPTH = 3
 BEAMSIZE = 1
+
+maxdepth = MAXDEPTH
+def set_max_depth(depth):
+    maxdepth = depth
+    
 class MinMaxTree:
     '''
     classdocs
     '''
-    def __init__(self, start, isblack, isMinLayer, blackModel=None, whiteModel=None, level=0, value=0.0, moveseries=''):
+    def __init__(self, start, isblack, isMinLayer, blackModel=None, whiteModel=None, level=0, value=None, moveseries=''):
         '''
         Constructor
         '''
@@ -34,39 +40,61 @@ class MinMaxTree:
         #print("{}={}".format(self.moveseries, self.value))
         self.i = -1
         self.j = -1
-        if level < MAXDEPTH:
+        if level < maxdepth-1:
             #eggs = []
             self.extend_tree()
 
 
     def extend_tree(self):
-        if self.value==2.0 or self.value<0.0:
+        if self.value is not None and (self.value==2.0 or self.value<0.0):
             print('{}: Cutting off search, terminal state found'.format(self.moveseries, self.value))
             return self
+        start = time.clock()
         validMoves = self.find_valid_moves()
-        probs = [x['prob'] for x in validMoves]
-        beam = min(len(probs)-1, BEAMSIZE)
+        if self.level==0:
+            print("Finding valid moves for {}".format('black' if self.isblack else 'white'))
+        ##probs = [x['prob'] for x in validMoves]
+        #beam = min(len(probs)-1, BEAMSIZE)
+
+        for vm in validMoves:
+            child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, 
+                               blackModel=self.blackModel, whiteModel=self.whiteModel, 
+                               level=self.level+1, value=vm['term'], moveseries=vm['ms'])
+            child.i = vm['x']
+            child.j = vm['y']
+            self.children.append(child)
+        if self.level==0:
+            print("Tree with {} initial moves expanded to depth={} constructed in {:1f} seconds.".format(len(validMoves), maxdepth, time.clock()-start))        
+        '''
         if self.isMinLayer:
             threshold = sorted(probs)[beam]
         else:
             threshold = sorted(probs)[-beam]
+        '''
         #print('Threshold = {}'.format(threshold))
+        '''
         for vm in validMoves:
             if (vm['prob']<threshold) == self.isMinLayer or vm['prob']==threshold:
                 mvstr = '%.03f' %vm['prob']
                 #print('  {} = {}'.format(vm['ms'], mvstr))
-                child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, blackModel=self.blackModel, whiteModel=self.whiteModel, level=self.level+1, value=vm['prob'], moveseries=vm['ms'])
-                child.i = vm['x']
-                child.j = vm['y']
-                self.children.append(child)
+                #child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, blackModel=self.blackModel, whiteModel=self.whiteModel, level=self.level+1, value=vm['prob'], moveseries=vm['ms'])
+            child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, blackModel=self.blackModel, whiteModel=self.whiteModel, level=self.level+1, moveseries=vm['ms'])
+            child.i = vm['x']
+            child.j = vm['y']
+            self.children.append(child)
+        '''
         return self
     
     def terminal_test(self, move, i, j, isblack):
         sb = len(determineLife(self.board, True))
         b = len(determineLife(move, True))
+        #if self.isblack:
+        #    ms = "{} b({},{})".format(self.moveseries, i, j)
+        #else:
+        #    ms = "{} w({},{})".format(self.moveseries, i, j)
         if (b-sb)>0:
             # black lives
-            print('{}: Black lives!'.format(self.moveseries))
+            #print('{}: Black lives!'.format(ms))
             return 2
         return 0
     
@@ -79,20 +107,26 @@ class MinMaxTree:
                     move = self.board.clone()
                     try:
                         move.place_stone(i,j,self.isblack)
-                        mval = self.evaluateMove(move,i,j,self.isblack)
+                        #mval = self.evaluateMove(move,i,j,self.isblack)
                         if self.isblack:
                             ms = "{} b({},{})".format(self.moveseries, i, j)
                         else:
                             ms = "{} w({},{})".format(self.moveseries, i, j)
                         #mvstr = '%.03f' %mval
                         #print('{} = {}'.format(ms, mvstr))
-                        validMoves.append({'board': move, 'prob': mval, 'ms': ms, 'x': i, 'y': j})
+                        #self.terminal_test(move, i, j, self.isblack)
+                        term_test = self.term_test_to_value(self.terminal_test(move, i, j, self.isblack), self.isblack)
+                        validMove = {'board': move, 'ms': ms, 'x': i, 'y': j, 'term': term_test}
+                        if term_test>1.0 and self.isblack:
+                            # This is the solution. Stop and throw away the rest. 
+                            print('{}: Cutting off search, terminal state found'.format(ms, self.value))
+                            return [validMove]
+                        validMoves.append(validMove)
                     except IllegalMove:
                         pass
         return validMoves
 
-    def evaluateMove(self, move, i, j, isblack):
-        term_test = self.terminal_test(move, i, j, isblack)
+    def term_test_to_value(self, term_test, isblack):
         if term_test==2:
             # Black lives
             if isblack:
@@ -113,7 +147,12 @@ class MinMaxTree:
                 if self.isMinLayer:
                     return -1
                 return 2
-        
+        return None
+    
+    def evaluateMove(self, move, i, j, isblack):
+        #term_test = self.term_test_to_value(self.terminal_test(move, i, j, isblack), isblack)
+        #if term_test is not None:
+        #    return term_test
         fe = FeatureExtractor()
         features = fe.extract_features(self.board, move, (i,j), isblack)
         headers = fe.sort_headers(features.keys())
@@ -145,12 +184,21 @@ class MinMaxTree:
 
     def bestChild(self):
         minmax = -100000.0
+        start = time.clock()
         best = self
+        if self.level==0:
+            print('Searching for best move ({} nodes, depth={}).'.format(len(self.children), maxdepth))
         if self.isMinLayer:
             minmax = 100000.0
+        childrenToEvaluate = []
         for c in self.children:
             b = c.bestChild()
-            if not b==None:
+            if b is None:
+                raise Exception('Unexpected error - child not found.')
+            if b is c and b.value is None:
+                # Evaluate leaves first
+                childrenToEvaluate.append(b)
+            if b.value is not None:
                 #print('{}={}+({},{})={} => {}'.format(c.moveseries, c.value, b.i,b.j,b.value,b.value+c.value))
                 c.value = b.value
                 if self.isMinLayer and c.value < minmax:
@@ -159,7 +207,23 @@ class MinMaxTree:
                 elif c.value > minmax and not self.isMinLayer:
                     minmax = c.value
                     best = c
+                    if minmax>1.0:
+                        self.value = best.value
+                        return best
+        # No terminal test cases, now evaluate the rest
+        for c in childrenToEvaluate:
+            if c.value is None:
+                c.value = self.evaluateMove(c.board, c.i, c.j, self.isblack)
+            if self.isMinLayer and c.value < minmax:
+                minmax = c.value
+                best = c
+            elif c.value > minmax and not self.isMinLayer:
+                minmax = c.value
+                best = c
+        
         self.value = best.value
+        if self.level==0:
+            print('Search took {:.3f} seconds ({} nodes, depth={}).'.format(time.clock()-start, len(self.children), maxdepth))
         #print('best: {}={}'.format(best.moveseries, best.value))
         return best
 
