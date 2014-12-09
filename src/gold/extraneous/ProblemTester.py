@@ -13,7 +13,7 @@ from gold.extraneous.MoveTreeParser import MoveTreeParser,\
     UnspecifiedProblemType
 from gold.models.board import IllegalMove
 from random import seed, shuffle
-from gold.models.search import MinMaxTree, set_max_depth
+from gold.models.search import MinMaxTree
 from gold.extraneous.life import determineLife
 from gold.extraneous.terminalLife import findAliveGroups
 from gold.learn.Model import Model
@@ -25,7 +25,7 @@ class YouLoseException(Exception):
     def __str__(self):
         return repr(self.value)
     
-def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None):
+def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None):
     if w<0:
         liveWGr = determineLife(move, False)
         w = len(liveWGr)
@@ -36,10 +36,14 @@ def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None):
         probS=''
     else:
         probS = ' {:.3f}'.format(prob)
-    if sw<0 and sb<0:
-        print('{}: w={}, b={}, nw={}, nb={}{}'.format(label,w,b,len(move.white_stones),len(move.black_stones),probS))
+    if etime is None:
+        timeS = ''
     else:
-        print('{}: w={}, b={}, sw={}, sb={}, nw={}, nb={}{}'.format(label,w,b,sw,sb,len(move.white_stones),len(move.black_stones),probS))
+        timeS = ' ({:.1f} seconds).'.format(etime)
+    if sw<0 and sb<0:
+        print('{}: w={}, b={}, nw={}, nb={}{}{}'.format(label,w,b,len(move.white_stones),len(move.black_stones),probS, timeS))
+    else:
+        print('{}: w={}, b={}, sw={}, sb={}, nw={}, nb={}{}{}'.format(label,w,b,sw,sb,len(move.white_stones),len(move.black_stones),probS,timeS))
 
 def get_terminal_states(mtp):
     ss = mtp.getSolutionPaths()
@@ -83,14 +87,15 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     pathLength = 0
     isblack = mtp.blackFirst != mtp.flipColors
     isBtL = (mtp.problemType == 1 or mtp.problemType==3)
+    print('GOLD:')
     if isblack:
         mmt = MinMaxTree(move, True, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     else:
         mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
-    print('GOLD:')
     passed = False
     while( move not in solutionStates and pathLength<2*longestPath+1):
         color = 'B' if isblack else 'W'
+        start = time.clock()
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
@@ -111,7 +116,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         #b = len(determineLife(move,True))
         b = len(determineLife(move, True))
         w = len(determineLife(move, False))
-        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=float(mmt.value))
+        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=float(mmt.value), etime=time.clock()-start)
         if move in terminalIncorrectStates:
             raise YouLoseException('Haha! You lose!')
         if move in solutionStates:
@@ -209,7 +214,7 @@ def load_model(modelFile, modelType, scalerFile):
 def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdepth=3):
     
     #test_problem(sys.argv[1], modelBtL, modelWtK)
-    set_max_depth(maxdepth)
+    MinMaxTree.maxdepth=maxdepth
     problemsDone = set()
     if not rerun:
         try:
@@ -243,35 +248,37 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                         if result>0:
                             numCorrect+=1
                     if result!=-1:
-                        print('Total: {}/{} correct'.format(totalNumCorrect, totalTotal))
-
+                        print('Total: {}/{} correct'.format(numCorrect, totalTotal))
+                    totalNumCorrect += numCorrect
+                    totalTotal += numTotal
                 else:
                     print('Not a dir or problem file: {}'.format(problemDir))
                 sys.exit()
-            dirs = glob(problemDir+'/*')
-            shuffle(dirs)
-            for probdiff in dirs:
-                if os.path.isdir(probdiff):
-                    files = glob(probdiff+'/*.sgf')
-                    for probfile in files:
-                        
-                        result = call_test_problem(probfile, modelBtL, modelWtK, fout, skip=problemsDone)
-                        if result>=0:
-                            numTotal+=1
-                            if result>0:
-                                numCorrect+=1
-                    if result!=-1:
-                        print('{}: {}/{} correct'.format(probdiff, numCorrect, numTotal))
-                        
-                else:
-                    if probdiff[-3:]=='sgf':
-                        result = call_test_problem(probdiff, modelBtL, modelWtK, fout, skip=problemsDone)
-                        if result>=0:
-                            numTotal+=1
-                            if result>0:
-                                numCorrect+=1
-                    if result!=-1:
-                        print('{}: {}/{} correct'.format(problemDir, numCorrect, numTotal))
+            else:
+                dirs = glob(problemDir+'/*')
+                shuffle(dirs)
+                for probdiff in dirs:
+                    if os.path.isdir(probdiff):
+                        files = glob(probdiff+'/*.sgf')
+                        for probfile in files:
+                            
+                            result = call_test_problem(probfile, modelBtL, modelWtK, fout, skip=problemsDone)
+                            if result>=0:
+                                numTotal+=1
+                                if result>0:
+                                    numCorrect+=1
+                        if result!=-1:
+                            print('{}: {}/{} correct'.format(probdiff, numCorrect, numTotal))
+                            
+                    else:
+                        if probdiff[-3:]=='sgf':
+                            result = call_test_problem(probdiff, modelBtL, modelWtK, fout, skip=problemsDone)
+                            if result>=0:
+                                numTotal+=1
+                                if result>0:
+                                    numCorrect+=1
+                        if result!=-1:
+                            print('{}: {}/{} correct'.format(problemDir, numCorrect, numTotal))
 
             totalNumCorrect+=numCorrect
             totalTotal+=numTotal
