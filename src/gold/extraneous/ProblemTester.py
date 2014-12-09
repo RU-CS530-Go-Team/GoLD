@@ -203,7 +203,7 @@ def load_model(modelFile, modelType, scalerFile):
 def test_problems(modelBtl, modelWtK, probdirs, outputfile):
     
     #test_problem(sys.argv[1], modelBtL, modelWtK)
-    with open(outputfile, 'w') as fout:
+    with open(outputfile, 'a') as fout:
         fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
         seed(1234567890)
         totalNumCorrect = 0
