@@ -34,7 +34,7 @@ class SparseDictionaryFeature(Feature):
 
     return data;
 
-  def calculate_feature(self, dataDir='features/'):
+  def calculate_feature(self, dataDir='../features/'):
     patchEx1 = PatchExtractor(self.start, self.start, self.movePosition, self.isblack)
     patchEx2 = PatchExtractor(self.start, self.move, self.movePosition, self.isblack)
 
