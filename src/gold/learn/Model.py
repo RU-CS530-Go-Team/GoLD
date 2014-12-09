@@ -127,18 +127,24 @@ class ModelBuilder():
     f.write(modelData)
     f.close()'''
 
-  def buildModelNeighbors(self,outputFile,maxSize=300,stepSize=10,folds=3,jobs=1):
-    neighbor_range = np.arange(1,maxSize,stepSize)
-    param_grid = dict(n_neighbors = neighbor_range)
-    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=folds)
-    grid = grid_search.GridSearchCV(neighbors.KNeighborsClassifier(), param_grid=param_grid, cv=cv, verbose=5, n_jobs=jobs)
-    grid.fit(self.instances, self.classes)
-    classifier = grid.best_estimator_
-    classifier.fit(self.instances, self.classes)
+  def buildModelNeighbors(self,outputFile,maxSize=300,stepSize=10,folds=3,jobs=1,numNeighbors=None):
+    classifier = None
+    if numNeighbors == None:
+      neighbor_range = np.arange(1,maxSize,stepSize)
+      param_grid = dict(n_neighbors = neighbor_range)
+      cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=folds)
+      grid = grid_search.GridSearchCV(neighbors.KNeighborsClassifier(), param_grid=param_grid, cv=cv, verbose=5, n_jobs=jobs)
+      grid.fit(self.instances, self.classes)
+      classifier = grid.best_estimator_
+      classifier.fit(self.instances, self.classes)
+    else:
+      classifier = neighbors.KNeighborsClassifier(n_neighbors = numNeighbors)
+      classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
     f.write(modelData)
     f.close()
+    return classifier.n_neighbors
 
   def buildModelNB(self,outputFile):
     classifier = naive_bayes.GaussianNB()
@@ -148,18 +154,24 @@ class ModelBuilder():
     f.write(modelData)
     f.close()
 
-  def buildModelRF(self,outputFile,maxTrees=300,stepSize=10,folds=3,jobs=1):
-    num_trees = np.arange(1,maxTrees,stepSize)
-    param_grid = dict(n_estimators = num_trees)
-    cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=folds)
-    grid = grid_search.GridSearchCV(ensemble.RandomForestClassifier(), param_grid=param_grid, cv=cv, verbose=5, n_jobs=jobs)
-    grid.fit(self.instances, self.classes)
-    classifier = grid.best_estimator_
-    classifier.fit(self.instances, self.classes)
+  def buildModelRF(self,outputFile,maxTrees=300,stepSize=10,folds=3,jobs=1,numTrees=None):
+    classifier = None
+    if numTrees == None:
+      num_trees = np.arange(1,maxTrees,stepSize)
+      param_grid = dict(n_estimators = num_trees)
+      cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=folds)
+      grid = grid_search.GridSearchCV(ensemble.RandomForestClassifier(), param_grid=param_grid, cv=cv, verbose=5, n_jobs=jobs)
+      grid.fit(self.instances, self.classes)
+      classifier = grid.best_estimator_
+      classifier.fit(self.instances, self.classes)
+    else:
+      classifier = ensemble.RandomForestClassifier(n_estimators = numTrees)
+      classifier.fit(self.instances, self.classes)
     modelData = pickle.dumps(classifier)
     f = open(outputFile,"w")
     f.write(modelData)
     f.close()
+    return classifier.n_estimators
 
   def buildModelLogReg(self,outputFile,weights='auto'):
     classifier = linear_model.LogisticRegression(class_weight=weights)
