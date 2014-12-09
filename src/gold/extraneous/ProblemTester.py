@@ -248,12 +248,12 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                         if result>0:
                             numCorrect+=1
                     if result!=-1:
-                        print('Total: {}/{} correct'.format(numCorrect, totalTotal))
+                        print('Total: {}/{} correct'.format(numTotal, totalTotal))
                     totalNumCorrect += numCorrect
                     totalTotal += numTotal
                 else:
                     print('Not a dir or problem file: {}'.format(problemDir))
-                sys.exit()
+
             else:
                 dirs = glob(problemDir+'/*')
                 shuffle(dirs)
