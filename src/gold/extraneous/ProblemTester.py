@@ -5,11 +5,12 @@ Created on Nov 28, 2014
 '''
 from gold.extraneous.MoveTreeParser import MoveTreeParser,\
     UnspecifiedProblemType
-from gold.models.board import IllegalMove, StoneGrouper
+from gold.models.board import IllegalMove
 from random import seed, shuffle
 import sys
 import time
 import os
+import csv
 from gold.models.search import MinMaxTree
 from gold.extraneous.life import determineLife
 from gold.extraneous.terminalLife import findAliveGroups
@@ -160,13 +161,16 @@ def parse_problem_filename(probfile):
     problemId = problemId.split('.')[-2]
     return [problemId, difficulty]
 
-def call_test_problem(probfile, modelBtL, modelWtK, fout=None):
+def call_test_problem(probfile, modelBtL, modelWtK, fout=None, skip=set()):
     ''' Returns 1 if problem is solved
         Returns 0 if problem could not be solved
         Returns -1 if problem could not be executed
     '''
     if probfile[-3:]=='sgf':
         [problemId, difficulty]=parse_problem_filename(probfile)
+        if problemId in skip:
+            print('Already did {} problem {}'.format(difficulty, problemId))
+            return -1
         #print(probdiff)
         problemType = 'error'
         try:
@@ -203,8 +207,18 @@ def load_model(modelFile, modelType, scalerFile):
 def test_problems(modelBtl, modelWtK, probdirs, outputfile):
     
     #test_problem(sys.argv[1], modelBtL, modelWtK)
+    problemsDone = set()
+    try:
+        with open(outputfile, 'r') as csvin: 
+            rdr = csv.reader(csvin)
+            for row in rdr:
+                problemsDone.add(row[0])
+    except Exception:
+        with open(outputfile, 'w') as fout:
+            fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
+
+    
     with open(outputfile, 'a') as fout:
-        fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
         seed(1234567890)
         totalNumCorrect = 0
         totalTotal = 0
@@ -216,7 +230,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile):
                 if len(problemDir)<3:
                     print('Not a dir or problem file: {}'.format(problemDir))
                 elif problemDir[-3:]=='sgf':
-                    result = call_test_problem(problemDir, modelBtL, modelWtK, fout)
+                    result = call_test_problem(problemDir, modelBtL, modelWtK, fout, skip=problemsDone)
                     if result>=0:
                         numTotal+=1
                         if result>0:
@@ -234,7 +248,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile):
                     files = glob(probdiff+'/*.sgf')
                     for probfile in files:
                         
-                        result = call_test_problem(probfile, modelBtL, modelWtK, fout)
+                        result = call_test_problem(probfile, modelBtL, modelWtK, fout, skip=problemsDone)
                         if result>=0:
                             numTotal+=1
                             if result>0:
@@ -244,7 +258,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile):
                         
                 else:
                     if probdiff[-3:]=='sgf':
-                        result = call_test_problem(probdiff, modelBtL, modelWtK, fout)
+                        result = call_test_problem(probdiff, modelBtL, modelWtK, fout, skip=problemsDone)
                         if result>=0:
                             numTotal+=1
                             if result>0:
