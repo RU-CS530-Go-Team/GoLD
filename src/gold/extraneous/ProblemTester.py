@@ -17,6 +17,7 @@ from gold.models.search import MinMaxTree
 from gold.extraneous.life import determineLife
 from gold.extraneous.terminalLife import findAliveGroups
 from gold.learn.Model import Model
+from gold.ui.Launcher import Launcher
 from glob import glob
 
 class YouLoseException(Exception):
@@ -93,9 +94,30 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     else:
         mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     passed = False
+    firstMove=True
     while( move not in solutionStates and pathLength<2*longestPath+1):
         color = 'B' if isblack else 'W'
         start = time.clock()
+        '''
+            if firstMove:
+            ui=Launcher(400,400,50,max(move.x,move.y))
+            ui.setBoard(move)
+            ui.drawBoard()
+            ui.mainloop()
+            move.place_stone(1,5, True)
+            nextMove = MinMaxTree(move, False, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
+            nextMove.i = 1
+            nextMove.j = 5
+            mmt = nextMove
+            firstMove=False
+            b = len(determineLife(move, True))
+            w = len(determineLife(move, False))
+            print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w)
+            isblack = not isblack
+            pathLength = pathLength+1
+            continue
+        else:
+        '''
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
@@ -116,7 +138,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         #b = len(determineLife(move,True))
         b = len(determineLife(move, True))
         w = len(determineLife(move, False))
-        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=float(mmt.value), etime=time.clock()-start)
+        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=mmt.value, etime=time.clock()-start)
         if move in terminalIncorrectStates:
             raise YouLoseException('Haha! You lose!')
         if move in solutionStates:
@@ -248,9 +270,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                         if result>0:
                             numCorrect+=1
                     if result!=-1:
-                        print('Total: {}/{} correct'.format(numTotal, totalTotal))
-                    totalNumCorrect += numCorrect
-                    totalTotal += numTotal
+                        print('Total: {}/{} correct'.format(numCorrect, numTotal))
                 else:
                     print('Not a dir or problem file: {}'.format(problemDir))
 
