@@ -3,12 +3,10 @@ Created on Nov 1, 2014
 
 @author: JBlackmore
 '''
-from gold.models.board import Board, StoneGrouper, IllegalMove
+from gold.models.board import IllegalMove
 from gold.learn.trainer import FeatureExtractor
-from gold.learn.Model import Model
 from gold.extraneous.life import determineLife
 
-import time
 import numpy as np
 from StringIO import StringIO
 
@@ -47,15 +45,8 @@ class MinMaxTree:
 
     def extend_tree(self):
         if self.terminal:
-        #if self.value is not None and (self.value==2.0 or self.value<0.0):
-            #print('{}: Cutting off search B, terminal state found'.format(self.moveseries, self.value))
             return self
-        start = time.clock()
         validMoves = self.find_valid_moves()
-        #if self.level==0:
-        #    print("Finding valid moves for {} to depth={}".format('black' if self.isblack else 'white', MinMaxTree.maxdepth))
-        ##probs = [x['prob'] for x in validMoves]
-        #beam = min(len(probs)-1, BEAMSIZE)
 
         for vm in validMoves:
             child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, 
@@ -69,26 +60,7 @@ class MinMaxTree:
             child.i = vm['x']
             child.j = vm['y']
             self.children.append(child)
-        #if self.level==0:
-        #    print("Tree with {} initial moves expanded to depth={} constructed in {:.1f} seconds.".format(len(validMoves), MinMaxTree.maxdepth, time.clock()-start))        
-        '''
-        if self.isMinLayer:
-            threshold = sorted(probs)[beam]
-        else:
-            threshold = sorted(probs)[-beam]
-        '''
-        #print('Threshold = {}'.format(threshold))
-        '''
-        for vm in validMoves:
-            if (vm['prob']<threshold) == self.isMinLayer or vm['prob']==threshold:
-                mvstr = '%.03f' %vm['prob']
-                #print('  {} = {}'.format(vm['ms'], mvstr))
-                #child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, blackModel=self.blackModel, whiteModel=self.whiteModel, level=self.level+1, value=vm['prob'], moveseries=vm['ms'])
-            child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, blackModel=self.blackModel, whiteModel=self.whiteModel, level=self.level+1, moveseries=vm['ms'])
-            child.i = vm['x']
-            child.j = vm['y']
-            self.children.append(child)
-        '''
+        
         return self
     
     def terminal_test(self, move, i, j, isblack):
@@ -123,7 +95,7 @@ class MinMaxTree:
                         #self.terminal_test(move, i, j, self.isblack)
                         term_test = self.term_test_to_value(self.terminal_test(move, i, j, self.isblack), self.isblack)
                         validMove = {'board': move, 'ms': ms, 'x': i, 'y': j, 'term': term_test}
-                        if term_test>1.0 and not self.isMinLayer:
+                        if term_test is not None and term_test>1.0 and not self.isMinLayer:
                             # This is the solution. Stop and throw away the rest. 
                             #print('{}: Cutting off search A, terminal state found'.format(ms, self.value))
                             return [validMove]
@@ -193,33 +165,42 @@ class MinMaxTree:
 
     def bestChild(self):
         minmax = -100000.0
-        start = time.clock()
         best = self
         #if self.level==0:
         #    print('Searching for best move ({} nodes, depth={}).'.format(len(self.children), MinMaxTree.maxdepth))
         if self.isMinLayer:
             minmax = 100000.0
         childrenToEvaluate = []
+        '''
+        if not self.isblack and self.level==0:
+            allTerm = True
+            for c in self.children:
+                for cc in c.children:
+                    if not cc.terminal:
+                        allTerm = False
+            if allTerm:
+                print('I have {} children, all dead.'.format(0 if self.children is None else len(self.children)))
+        '''
         for c in self.children:
             b = c.bestChild()
             if b is None:
                 raise Exception('Unexpected error - child not found.')
-            if b is c and (b.value is None or not b.terminal):
+            if (b.value is None or not b.terminal):
                 # Evaluate leaves first
                 childrenToEvaluate.append(b)
             if b.value is not None:
-                c.value = b.value
-                if self.isMinLayer and c.value < minmax:
+                #c.value = b.value
+                if self.isMinLayer and c.value is not None and c.value < minmax:
                     minmax = c.value
                     best = c
-                elif c.value > minmax and not self.isMinLayer:
+                elif c.value > minmax and c.value is not None and not self.isMinLayer:
                     minmax = c.value
                     best = c
                     if minmax>1.0:
-                        self.value = best.value
+                        #self.value = best.value
                         return best
         
-        self.value = best.value
+        #self.value = best.value
         # Only compute probability for children at next level
         if self.level==0:
             # No terminal test cases, now evaluate the rest
@@ -232,6 +213,7 @@ class MinMaxTree:
                 elif c.value > minmax and not self.isMinLayer:
                     minmax = c.value
                     best = c
+            self.value = best.value
             #print('Search took {:.1f} seconds ({} nodes, depth={}).'.format(time.clock()-start, len(self.children), MinMaxTree.maxdepth))
         #print('best: {}={}'.format(best.moveseries, best.value))
         return best
