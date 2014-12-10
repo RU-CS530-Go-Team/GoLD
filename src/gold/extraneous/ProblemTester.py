@@ -17,7 +17,7 @@ from gold.models.search import MinMaxTree
 from gold.extraneous.life import determineLife
 from gold.extraneous.terminalLife import findAliveGroups
 from gold.learn.Model import Model
-from gold.ui.Launcher import Launcher
+#from gold.ui.Launcher import Launcher
 from glob import glob
 
 class YouLoseException(Exception):
@@ -89,15 +89,35 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     isblack = mtp.blackFirst != mtp.flipColors
     isBtL = (mtp.problemType == 1 or mtp.problemType==3)
     print('GOLD:')
+    start = time.clock()        
     if isblack:
         mmt = MinMaxTree(move, True, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     else:
         mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
+    mmt.extend_tree()
     passed = False
-    firstMove=True
+    firstMove=False
     while( move not in solutionStates and pathLength<2*longestPath+1):
         color = 'B' if isblack else 'W'
-        start = time.clock()
+        if firstMove:
+            '''
+            ui=Launcher(400,400,50,max(move.x,move.y))
+            ui.setBoard(move)
+            ui.drawBoard()
+            ui.mainloop()
+            '''
+            move.place_stone(4,6, True)
+            nextMove = MinMaxTree(move, False, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
+            nextMove.i = 4
+            nextMove.j = 6
+            mmt = nextMove
+            firstMove=False
+            b = len(determineLife(move, True))
+            w = len(determineLife(move, False))
+            print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w)
+            isblack = not isblack
+            pathLength = pathLength+1
+            continue
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
@@ -119,6 +139,8 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         b = len(determineLife(move, True))
         w = len(determineLife(move, False))
         print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=mmt.value, etime=time.clock()-start)
+        start = time.clock()        
+
         if move in terminalIncorrectStates:
             raise YouLoseException('Haha! You lose!')
         if move in solutionStates:
@@ -224,7 +246,8 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                 rdr = csv.reader(csvin)
                 for row in rdr:
                     problemsDone.add(row[0])
-        except Exception:
+        except Exception as e:
+            print(e)
             with open(outputfile, 'w') as fout:
                 fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
 
@@ -292,6 +315,7 @@ if __name__ == '__main__':
     # rerun problems, 
     parser.add_argument('--rerun_problems', '-r', action='store_true', help='rerun problems already run')
     parser.add_argument('--max_depth', '-d', default='3', metavar='int', type=int, choices=[x+1 for x in range(5)], help='maximum depth to search for the next move')
+    parser.add_argument('--output_file', '-o', help='output file', required=False)
     parser.add_argument('model_dir', help='location of machine learning models')
     parser.add_argument('problem_dir_or_file', nargs='+', help='path to problem directory or file')
     '''
