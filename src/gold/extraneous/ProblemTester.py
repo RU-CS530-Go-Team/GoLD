@@ -98,26 +98,6 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     while( move not in solutionStates and pathLength<2*longestPath+1):
         color = 'B' if isblack else 'W'
         start = time.clock()
-        '''
-            if firstMove:
-            ui=Launcher(400,400,50,max(move.x,move.y))
-            ui.setBoard(move)
-            ui.drawBoard()
-            ui.mainloop()
-            move.place_stone(1,5, True)
-            nextMove = MinMaxTree(move, False, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
-            nextMove.i = 1
-            nextMove.j = 5
-            mmt = nextMove
-            firstMove=False
-            b = len(determineLife(move, True))
-            w = len(determineLife(move, False))
-            print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w)
-            isblack = not isblack
-            pathLength = pathLength+1
-            continue
-        else:
-        '''
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
