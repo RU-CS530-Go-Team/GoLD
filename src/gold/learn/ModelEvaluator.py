@@ -59,11 +59,13 @@ class ModelEvaluator():
     elif pca == 2:
       runType = runType + "-pcaW"
 
+
     featureSelector = ""
     if label == "BtL":
       featureSelector = "learn/BtLFeatureSelector.txt"
     elif label == "WtK":
       featureSelector = "learn/WtKFeatureSelector.txt"
+
 
     for i in range(0,numRuns):
       temp = ModelBuilder([trainingFile],1)
@@ -75,8 +77,8 @@ class ModelEvaluator():
       if downsample == 1:
         temp.downSample()
 
-      temp.setFeaturesFromSelector(featureSelector)
-      temp.selectFeatures()
+      #temp.setFeaturesFromSelector(featureSelector)
+      #temp.selectFeatures()
 
       if pca == 1:
         try:
@@ -125,8 +127,8 @@ class ModelEvaluator():
         temp.setScaler("scaler.txt")
         temp.scaleData()
 
-      temp.setFeaturesFromSelector(featureSelector)
-      temp.selectFeatures()
+      #temp.setFeaturesFromSelector(featureSelector)
+      #temp.selectFeatures()
 
       if pca == 1 or pca == 2:
         temp.setDimensionReducer("reducer.txt")

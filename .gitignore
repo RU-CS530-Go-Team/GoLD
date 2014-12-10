@@ -3,3 +3,5 @@ src/gold/extraneous/games/
 *.project
 *.pydevproject
 *.sgf
+*.csv
+*.txt

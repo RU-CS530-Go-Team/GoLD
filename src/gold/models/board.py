@@ -39,6 +39,8 @@ class Board:
         #return hash(tuple([sorted(tuple(board.black_stones)), sorted(tuple(board.white_stones)), self.x, self.y]))
     
     def __eq__(self, other):
+        if other is None:
+            return False
         if self.x != other.x:
             return False
         if self.y != other.y:

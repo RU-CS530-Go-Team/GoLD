@@ -5,7 +5,7 @@ from copy import deepcopy
 
 checked = {}
 
-def findAliveGroups(board, color):
+def findAliveGroups(board, color, maxdepth=10):
     if color:
         stones = board.black_stones
         other = board.white_stones
@@ -57,11 +57,11 @@ def findAliveGroups(board, color):
     ans = []
     for current_group in groups:
         current_group = list(current_group)
-        if alive(current_group, board, color, 0):
+        if alive(current_group, board, color, 0, maxdepth):
             ans.append(current_group)
     return ans
 
-def alive(current_group, board, color, depth):
+def alive(current_group, board, color, depth, maxdepth=10):
     if (tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group)) in checked:
         #print "Redundant"
         return checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))]
@@ -79,7 +79,7 @@ def alive(current_group, board, color, depth):
                 checked[(tuple(board.black_stones), tuple(board.white_stones), board.x, board.y, tuple(current_group))] = True
                 return True
         #return True
-    if depth > 5: return False
+    if depth > maxdepth: return False
     max_X = max([x[0] for x in current_group]) +1
     max_Y = max([x[1] for x in current_group]) +1
     min_X = min([x[0] for x in current_group]) -1
@@ -102,7 +102,7 @@ def alive(current_group, board, color, depth):
                             current_board_2.place_stone(x1, y1, color)
                             #print current_board_2
                             #print depth
-                            if alive(current_group, current_board_2, color, depth + 1):
+                            if alive(current_group, current_board_2, color, depth + 1, maxdepth):
                                 #print "Alive"
                                 #print current_board_2
                                 #raw_input()

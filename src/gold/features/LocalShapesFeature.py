@@ -494,4 +494,3 @@ class LocalShapesFeature(Feature):
     i,j = np.unravel_index(convolvedBoardSum.argmax(), convolvedBoardSum.shape)
     maxNum = convolvedBoardSum[i,j]
     return (targetNum == maxNum)
-

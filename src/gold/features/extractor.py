@@ -142,7 +142,7 @@ class FeatureExtractor():
                     wwtr.writerow(newrow)
 
 if __name__ == '__main__':
-    base = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/resplit/'
+    base = '../working_data/'
     
     fe = FeatureExtractor()
     
@@ -165,6 +165,15 @@ if __name__ == '__main__':
     wtkcsvname = base + 'devfeaturesWtK.csv'
     fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)
     
+    csvfname = base+'testfeatures.csv'
+    btlcsvname = base+'testfeaturesBtL_T.csv'
+    #fe.convert_csv_for_terminal_test(csvfname, 1, btlcsvname)
+    wtkcsvname = base+'testfeaturesWtK_T.csv'
+    #fe.convert_csv_for_terminal_test(csvfname, 2, wtkcsvname)
+    
+    btlcsvname = base + 'testfeaturesBtL.csv'
+    wtkcsvname = base + 'testfeaturesWtK.csv'
+    fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)
     '''
     csvfname = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/resplit/trainfeatures_with_nlg.csv'
     newcsvname = 'c:/users/jblackmore/documents/development/rutgers/gold//problems/resplit/trainfeaturesBtL_T.csv'
