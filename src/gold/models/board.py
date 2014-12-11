@@ -40,8 +40,8 @@ class Board:
     def init_zobrist(self):
         hashboard = []
         for i in range(self.x * self.y):
-            q = randint(0, (2 ** 500) - 1)
-            w = randint(0, (2 ** 500) - 1)
+            q = randint(0, (2 ** 50) - 1)
+            w = randint(0, (2 ** 50) - 1)
             hashboard.append([q, w])
         return hashboard
     
@@ -53,9 +53,9 @@ class Board:
     def hash(self, old = 0):
         ans = old
         for i, v in sorted(self.black_stones):
-            ans = ans | self.zobrist[i * self.x + v][0]
+            ans = ans ^ self.zobrist[i * self.x + v][0]
         for i, v in sorted(self.white_stones):
-            ans = ans | self.zobrist[i * self.x + v][0]
+            ans = ans ^ self.zobrist[i * self.x + v][0]
         return ans 
     
     def __eq__(self, other):
@@ -132,14 +132,7 @@ class Board:
         if (x, y) not in stones:
             self.black_stones, self.white_stones, self.prior_moves = old
             raise IllegalMove("Suicide is not allowed")
-        #index = 1 if isblack else 0
-        #stones = self.white_stones if isblack else self.black_stones
-        #for q, w in set(old[index]) - set(stones):
-        #    self.hashval = self.hashval | self.zobrist[q * self.x + w][index]
-        #index = 0 if index == 1 else 1
-        oldie = deepcopy(self.hashval)
-        self.hashval = self.hash()#self.hashval | self.zobrist[x * self.x + y][index]
-        if oldie == self.hashval: print "WTF"
+        self.hashval = self.hash()
         
     def update(self, isblack):
         if isblack:
