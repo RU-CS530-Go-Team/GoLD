@@ -21,7 +21,7 @@ class Board:
         self.white_stones = []
         self.black_stones = []
         self.prior_moves = []
-        self.zobrist = init_zobrist()
+        self.zobrist = self.init_zobrist()
         self.hashval = self.hash()
         
     def __str__(self):
@@ -40,10 +40,12 @@ class Board:
     def init_zobrist(self):
         hashboard = []
         for i in range(self.x * self.y):
-            hashboard.append([self.randbin2(50), self.randbin2(50)])
+            q = randint(0, (2 ** 500) - 1)
+            w = randint(0, (2 ** 500) - 1)
+            hashboard.append([q, w])
         return hashboard
     
-    def randbin2(d): 
+    def randbin(d): 
         mx = (2 ** d) - 1 
         b = randint(0, mx)
         return b#[2:].rjust(d, '0') 
@@ -130,7 +132,14 @@ class Board:
         if (x, y) not in stones:
             self.black_stones, self.white_stones, self.prior_moves = old
             raise IllegalMove("Suicide is not allowed")
-        
+        #index = 1 if isblack else 0
+        #stones = self.white_stones if isblack else self.black_stones
+        #for q, w in set(old[index]) - set(stones):
+        #    self.hashval = self.hashval | self.zobrist[q * self.x + w][index]
+        #index = 0 if index == 1 else 1
+        oldie = deepcopy(self.hashval)
+        self.hashval = self.hash()#self.hashval | self.zobrist[x * self.x + y][index]
+        if oldie == self.hashval: print "WTF"
         
     def update(self, isblack):
         if isblack:
