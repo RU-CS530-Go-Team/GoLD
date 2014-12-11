@@ -1,5 +1,6 @@
 from array import array
 from copy import deepcopy
+from random import randint
 
 class IllegalMove(Exception):
     def __init__(self, value):
@@ -20,6 +21,7 @@ class Board:
         self.white_stones = []
         self.black_stones = []
         self.prior_moves = []
+        self.zobrist = init_zobrist()
 
     def __str__(self):
         ans = ""
@@ -34,9 +36,24 @@ class Board:
             ans += "\n"
         return ans
     
+    def init_zobrist(self):
+        hashboard = []
+        for i in range(self.x * self.y):
+            hashboard.append([self.randbin2(25), self.randbin2(25)])
+        return hashboard
+    
+    def randbin2(d): 
+        mx = (2 ** d) - 1 
+        b = bin(randint(0, mx)) 
+        return b[2:].rjust(d, '0') 
+    
     def __hash__(self):
-        return hash(tuple([tuple(sorted(self.black_stones)), tuple(sorted(self.white_stones)), self.x, self.y]))
-        #return hash(tuple([sorted(tuple(board.black_stones)), sorted(tuple(board.white_stones)), self.x, self.y]))
+        ans = ''
+        for i, v in sorted(self.black_stones):
+            ans += self.zobrist[i * self.x + v][0]
+        for i, v in sorted(self.white_stones):
+            ans += self.zobrist[i * self.x + v][1]
+        return ans 
     
     def __eq__(self, other):
         if other is None:
