@@ -24,6 +24,8 @@ from glob import glob
 class YouLoseException(Exception):
     def __init__(self, value, path=None):
         self.value = value
+        self.path = path
+
     def __str__(self):
         return repr(self.value)
     
@@ -141,7 +143,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                 print('You Win!!! Black has {} groups that are unconditionally alive!'.format(b))
                 return path
             else:
-                raise YouLoseException('Black lives!! You Lose!!')
+                raise YouLoseException('Black lives!! You Lose!!', path)
         pathLength = pathLength+1
         if pathLength>=2*longestPath+1:
             if not isBtL:
@@ -157,7 +159,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                     else:
                         print('Search depth is already down to 3!')
                 if numAliveGroups>0:
-                    raise YouLoseException('Too many moves and black can live, you lose!!')
+                    raise YouLoseException('Too many moves and black can live, you lose!!', path)
                 print('You win!! Black is dead!')
                 return path
             raise YouLoseException('Too many moves, you lose!!', path)
