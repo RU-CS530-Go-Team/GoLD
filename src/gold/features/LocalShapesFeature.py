@@ -218,16 +218,16 @@ class LocalShapesFeature(Feature):
 
     features = list(features2)+list(featuresDiff)
 
-    #return features
+    return features
 
-    model = None
+    '''model = None
 
     if self.isblack:
       model = Model(dataDir+"localShapeModelBtL.txt",0)
     else:
       model = Model(dataDir+"localShapeModelWtK.txt",0)
 
-    return model.getScoreCorrect(features)
+    return model.getScoreCorrect(features)'''
 
   def set_shape_templates(self,shapeFile1,shapeFile2):
     f = open(shapeFile1)

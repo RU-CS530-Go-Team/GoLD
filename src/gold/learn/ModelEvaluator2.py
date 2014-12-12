@@ -176,5 +176,7 @@ class ModelEvaluator2():
     print runType + "," + str(precision) + "," + str(recall) + "," + str(fmeasure) + "," + str(accuracy)
     return runType + "," + str(precision) + "," + str(recall) + "," + str(fmeasure) + "," + str(accuracy)
 
-if __init__ == "__main__":
+if __name__ == "__main__":
+    
+    print "Beginning Evaluation"
     temp = ModelEvaluator2("../working_data/latest/output.csv", [["../working_data/latest/trainfeaturesBtL.csv", "../working_data/latest/devfeaturesBtL.csv"], ["../working_data/latest/trainfeaturesWtK.csv", "../working_data/latest/devfeaturesWtK.csv"]], ["../working_data/latest/testfeaturesBtL.csv", "../working_data/latest/testfeaturesWtK.csv"], ["BtL", "WtK"])
