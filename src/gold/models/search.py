@@ -7,18 +7,20 @@ from gold.models.board import IllegalMove
 from gold.learn.trainer import FeatureExtractor
 from gold.extraneous.life import determineLife
 
+import time
 import numpy as np
 from StringIO import StringIO
 
 MAXDEPTH = 3
-BEAMSIZE = 1
+BEAMSIZE = 50
 
-    
+ 
 class MinMaxTree:
     '''
     classdocs
     '''
     maxdepth = MAXDEPTH
+    beamsize = BEAMSIZE
     
     def __init__(self, start, isblack, isMinLayer, blackModel=None, whiteModel=None, level=0, value=None, moveseries=''):
         '''
@@ -42,11 +44,12 @@ class MinMaxTree:
 
     def extend_tree(self):
         if self.level >= MinMaxTree.maxdepth:
-            return self
+            return 0
         if self.terminal:
-            return self
+            return 0
+        start = time.clock()
         validMoves = self.find_valid_moves()
-
+        nodes_added=0
         for vm in validMoves:
             child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, 
                                blackModel=self.blackModel, whiteModel=self.whiteModel, 
@@ -55,17 +58,25 @@ class MinMaxTree:
             child.j = vm['y']
             #print('{}'.format(child.moveseries))
             self.children.append(child)
+            nodes_added+=1
             if vm['term'] is not None:
                 child.terminal = True
                 if self.isblack:
                     #print('{} is TERMINAL. I want that'.format(child.moveseries))
                     self.children=[child]
-                    return self
-                #if not self.isblack and self.level==0:
-                #    print(' T:{}'.format(vm['ms']))
-        for child in self.children:
-            child.extend_tree()
-        return self
+                    return 1
+        # Evaluate all first moves
+        if self.level==0:
+            for child in self.children:
+                child.value = self.evaluateMove(child.board, child.i, child.j, self.isblack)
+            # Search the most likely moves in the proper order
+            for child in sorted(self.children, key=lambda child: child.value, reverse=(not self.isMinLayer))[:min(MinMaxTree.beamsize, len(self.children)-1)]:
+                nodes_added+=child.extend_tree()
+            print('Extended tree by {} nodes in {:.1f} seconds.', nodes_added, time.clock()-start)
+        else:
+            for child in self.children:
+                nodes_added+=child.extend_tree()
+        return nodes_added
     
     def terminal_test(self, move, i, j, isblack):
         sb = len(determineLife(self.board, True))
@@ -235,9 +246,12 @@ class MinMaxTree:
         # Only compute probability for children at next level
         if self.level==0: # or (self.isMinLayer and minmax>1):
             # No terminal test cases, now evaluate the rest
+            #for i in range(min(MinMaxTree.beamsize, len(childrenToEvaluate))):
             for c in childrenToEvaluate:
+                #c = childrenToEvaluate[i]
                 if c.value is None:
                     c.value = self.evaluateMove(c.board, c.i, c.j, self.isblack)
+                    
                 if self.isMinLayer and c.value < minmax:
                     minmax = c.value
                     best = c
@@ -264,14 +278,18 @@ class MinMaxTree:
         if newlevel>self.level:
             raise ValueError('Cannot increase level when promoting ({}>{})'.format(newlevel>self.level))
         if newlevel==self.level:
-            return
+            return 0
         self.level=newlevel
+        start = time.clock()
+        nodes_added=0
         if self.children==None or len(self.children)==0:
-            self.extend_tree()
+            nodes_added+=self.extend_tree()
         else:
             for child in self.children:
-                child.promote(newlevel+1)
-        return self
+                nodes_added+=child.promote(newlevel+1)
+            if self.level==0:
+                print('Promotion added {} nodes in {:.1f} seconds'.format(nodes_added, time.clock()-start))
+        return nodes_added
 
     def decideNextMove(self):
         c = self.bestChild()
