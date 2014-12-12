@@ -39,10 +39,11 @@ class Board:
     
     def init_zobrist(self):
         hashboard = []
-        for i in range(self.x * self.y):
-            q = randint(0, (2 ** 50) - 1)
-            w = randint(0, (2 ** 50) - 1)
-            hashboard.append([q, w])
+        for i in range(self.x):
+            temp = []
+            for e in range(self.y):
+                temp.append([randint(0, (2 ** 50) - 1), randint(0, (2 ** 50) - 1)])
+            hashboard.append(temp)
         return hashboard
     
     def randbin(d): 
@@ -53,9 +54,9 @@ class Board:
     def hash(self, old = 0):
         ans = old
         for i, v in sorted(self.black_stones):
-            ans = ans ^ self.zobrist[i * (self.x-1) + v][0]
+            ans = ans ^ self.zobrist[i][v][0]
         for i, v in sorted(self.white_stones):
-            ans = ans ^ self.zobrist[i * (self.x-1) + v][0]
+            ans = ans ^ self.zobrist[i][v][1]
         return ans 
     
     def __eq__(self, other):
@@ -81,6 +82,8 @@ class Board:
         new.white_stones = [x for x in self.white_stones]
         new.black_stones = [x for x in self.black_stones]
         new.prior_moves = [x for x in self.prior_moves]
+        new.zobrist = deepcopy(self.zobrist)
+        new.hash()
         return new
 
     def group_stones(self, isblack):
