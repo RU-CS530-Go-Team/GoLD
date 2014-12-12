@@ -53,9 +53,9 @@ class Board:
     def hash(self, old = 0):
         ans = old
         for i, v in sorted(self.black_stones):
-            ans = ans ^ self.zobrist[i * self.x + v][0]
+            ans = ans ^ self.zobrist[i * (self.x-1) + v][0]
         for i, v in sorted(self.white_stones):
-            ans = ans ^ self.zobrist[i * self.x + v][0]
+            ans = ans ^ self.zobrist[i * (self.x-1) + v][0]
         return ans 
     
     def __eq__(self, other):
