@@ -29,15 +29,17 @@ class YouLoseException(Exception):
     def __str__(self):
         return repr(self.value)
     
-def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, moves=None, prob=None, etime=None, nodecount=None):
-    if w<0:
+def print_move(label, move, sw=None, sb=None, w=None, b=None, moves=None, prob=None, etime=None, nodecount=None):
+    if w is None:
         liveWGr = determineLife(move, False)
         w = len(liveWGr)
-    if b<0:
+    if b is None:
         liveBGr = determineLife(move, True)
         b = len(liveBGr)
     if prob is None:
         probS=''
+    elif prob>=5.0:
+        probS = ' T'
     else:
         probS = ' {:.3f}'.format(prob)
     if etime is None:
@@ -47,7 +49,7 @@ def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, moves=None, prob=None, eti
         if nodecount is not None:
             timeS = ' ({} moves, {:.1f} seconds, {} nodes).'.format(moves, etime, nodecount)
             
-    if sw<0 and sb<0:
+    if sw is None or sb is None:
         print('{}: w={}, b={}, nw={}, nb={}{}{}'.format(label,w,b,len(move.white_stones),len(move.black_stones),probS, timeS))
     else:
         print('{}: w={}, b={}, sw={}, sb={}, nw={}, nb={}{}{}'.format(label,w,b,sw,sb,len(move.white_stones),len(move.black_stones),probS,timeS))
@@ -96,42 +98,35 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     [solutionStates, terminalIncorrectStates, longestPath] = get_terminal_states(mtp)
 
     move = mtp.start.clone()
+    isBtL = (mtp.problemType == 1 or mtp.problemType==3)
+    if not isBtL:
+        raise UnspecifiedProblemType('Only configured to test black-to-live problems')
     sb = len(determineLife(mtp.start, True))
     sw = len(determineLife(mtp.start, False))
     pathLength = 0
     isblack = mtp.blackFirst != mtp.flipColors
-    isBtL = (mtp.problemType == 1 or mtp.problemType==3)
     path = [move.clone()]
     print('GOLD:')
-    start = time.clock()        
-    if isblack:
-        mmt = MinMaxTree(move, True, not isBtL, blackModel=modelBtL, whiteModel=modelWtK)
-    else:
-        mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
+    start = time.clock()
+    mmt = MinMaxTree(move, isblack, not isblack, blackModel=modelBtL, whiteModel=modelWtK)        
     mmt.extend_tree()
     passed = False
-    while( move not in solutionStates and pathLength<2*longestPath+5):
+    maxpathlength = 2*longestPath+3
+    while( move not in solutionStates and pathLength<maxpathlength):
         color = 'B' if isblack else 'W'
-        if mmt.isblack != isblack:
-            raise ValueError('Ahem!')
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
             if passed:
-                if isBtL and len(determineLife(move, True))>0:
+                if mmt.terminal:
                     print('Two passes and Black lives. You win!!')
                     return path
                 raise YouLoseException('Two passes in a row. You Lose!', path)
             passed=True
             continue
-        try:
-            move.place_stone(nextMove.i, nextMove.j, isblack)
-        except IllegalMove as im:
-            print ('{}: decided it was the next move, no recovery.'.format(im))
-            return path
-        #b = len(determineLife(move,True))
-        b = len(determineLife(move, True))
-        w = len(determineLife(move, False))
+        elif passed:
+            passed =False
+        move.place_stone(nextMove.i, nextMove.j, mmt.isblack)
         if nextMove.value is None: 
             if nextMove.terminal:
                 prob = 5.0
@@ -139,44 +134,22 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                 prob = nextMove.value +10.0
         else:
             prob = nextMove.value
-        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, b=b, w=w, moves=len(mmt.children),prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
+        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, moves=len(mmt.children),prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
+        start = time.clock()        
         mmt = nextMove
         path.append(move.clone())
-        start = time.clock()        
 
         if move in terminalIncorrectStates:
             raise YouLoseException('Haha! You lose!', path)
         if move in solutionStates:
             print('Solution matched!! You Win!! ')
             return path
-        if b>sb:
-            if isBtL:
-                print('You Win!!! Black has {} groups that are unconditionally alive!'.format(b))
-                return path
-            else:
-                raise YouLoseException('Black lives!! You Lose!!', path)
+        if mmt.terminal:
+            print('You Win!!! Black has groups that are unconditionally alive!')
         pathLength = pathLength+1
-        if pathLength>=2*longestPath+5:
-            if not isBtL:
-                start = time.clock()
-                print('Searching for black to live...')
-                numAliveGroups= len(findAliveGroups(move, True))
-                searchTime= time.clock()-start
-                print('Search took {:1f} seconds. {} alive.'.format(searchTime, '{} groups are'.format(numAliveGroups) if numAliveGroups !=1 else '1 group is'))
-                if searchTime>600.0:
-                    if maxdepth>3:
-                        maxdepth -=1
-                        print('Reducing search depth to {}'.format(maxdepth))
-                    else:
-                        print('Search depth is already down to 3!')
-                if numAliveGroups>0:
-                    raise YouLoseException('Too many moves and black can live, you lose!!', path)
-                print('You win!! Black is dead!')
-                return path
-            raise YouLoseException('Too many moves, you lose!!', path)
-            
+        if pathLength<maxpathlength:
+            mmt.promote()
         isblack = not isblack
-        mmt.promote()
             
     raise YouLoseException('Too many moves, you lose!!', path)
         
@@ -213,7 +186,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
         isBtL = (mtp.problemType == 1 or mtp.problemType==3)
         if not isBtL:
             return -1
-        problemType = '1' if isBtL else '2'
+        problemType = '1'
         print probfile
         start = time.clock()
         path = test_problem(mtp, modelBtL, modelWtK)
@@ -229,10 +202,11 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
         result= 0
     if result>=0:
         if outputfile is not None:
+            etime = time.clock()-start
             fout = open(outputfile, 'a')
             fout.write('{},{},{},{},{},'.format(problemId, problemType,difficulty,mtp.start.x, mtp.start.y))
             fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
-            fout.write('{},{:.1f},{}\n'.format(len(path), time.clock()-start, result))
+            fout.write('{},{:.1f},{}\n'.format(len(path), etime, result))
             fout.close()
         if show and result>=0:
             ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
