@@ -124,24 +124,24 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                 raise YouLoseException('Two passes in a row. You Lose!', path)
             passed=True
             continue
-        mmt = nextMove
         try:
-            move.place_stone(mmt.i, mmt.j, isblack)
+            move.place_stone(nextMove.i, nextMove.j, isblack)
         except IllegalMove as im:
             print ('{}: decided it was the next move, no recovery.'.format(im))
             return path
-        path.append(move.clone())
         #b = len(determineLife(move,True))
         b = len(determineLife(move, True))
         w = len(determineLife(move, False))
-        if mmt.value is None: 
-            if mmt.terminal:
+        if nextMove.value is None: 
+            if nextMove.terminal:
                 prob = 5.0
             else:
-                prob = mmt.value +10.0
+                prob = nextMove.value +10.0
         else:
-            prob = mmt.value
-        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
+            prob = nextMove.value
+        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, b=b, w=w,prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
+        mmt = nextMove
+        path.append(move.clone())
         start = time.clock()        
 
         if move in terminalIncorrectStates:
