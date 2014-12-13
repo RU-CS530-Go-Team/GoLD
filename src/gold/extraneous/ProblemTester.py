@@ -232,7 +232,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
             fout = open(outputfile, 'a')
             fout.write('{},{},{},'.format(problemId, problemType,difficulty))
             fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
-            fout.write('{},{}\n'.format(len(path), time.clock()-start, result))
+            fout.write('{},{},{}\n'.format(len(path), time.clock()-start, result))
             fout.close()
         if show and result>=0:
             ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
