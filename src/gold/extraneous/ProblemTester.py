@@ -148,6 +148,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
             mmt.sb = len(determineLife(mmt.board,isblack))
         if mmt.sb>sb:
             print('You win!!! Black has groups that are unconditionally alive!')
+            return path
         pathLength = pathLength+1
         if pathLength<maxpathlength:
             mmt.promote()
