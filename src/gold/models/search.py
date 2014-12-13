@@ -61,8 +61,6 @@ class MinMaxTree:
             return 0
         start = time.clock()
         validMoves = self.find_valid_moves()
-        if self.level==0:
-            print('Found {} valid moves.'.format(len(validMoves)))
         nodes_added=0
         hasTerm = False
         for vm in validMoves:
@@ -122,9 +120,9 @@ class MinMaxTree:
                 for child in self.children:
                     child.value = self.evaluateMove(child.board, child.i, child.j, self.isblack)
                     #print('{}: {:.3f}'.format(child.moveseries, child.value))
+                print('Evaluated {} valid moves in {:.1f} seconds.'.format(len(self.children), time.clock()-start))
                 self.children= sorted(self.children, key=lambda child: child.value, reverse=(not self.isMinLayer))[:min(MinMaxTree.beamsize, len(self.children)-1)]
                 # Search the most likely moves in the proper order
-                print('Evaluated {} moves in {:.1f} seconds.'.format(len(self.children), time.clock()-start))
 
             start = time.clock()
             for child in self.children:
@@ -274,18 +272,24 @@ class MinMaxTree:
             self.children[0].terminal=True
             return self.children[0]
         best=None
+        start = time.clock()
+        movesEvaluated = 0
         for child in childrenToEvaluate:
             if child.terminal:
                 raise Exception('Internal Error - not expecting terminal cases here.')
             if child.value is None:
                 child.value = self.evaluateMove(child.board, child.i, child.j, self.isblack)
                 #print('{}: {:.3f}'.format(child.moveseries, child.value))
+                movesEvaluated+=1
             if best is None:
                 best = child
             if self.isMinLayer and child.value<best.value:
                 best = child
             if not self.isMinLayer and child.value>best.value:
                 best = child
+        if movesEvaluated>0:
+            print('Evaluated {} valid moves in {:.1f} seconds.'.format(movesEvaluated, time.clock()-start))
+            
         if best is None:
             if len(self.children)>0:
                 return self.children[0]
