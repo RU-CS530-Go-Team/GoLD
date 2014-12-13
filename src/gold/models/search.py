@@ -48,6 +48,12 @@ class MinMaxTree:
         self.j = -1
 
 
+    def node_count(self):
+        count=0
+        for child in self.children:
+            count+=child.node_count()
+        return count+1
+    
     def extend_tree(self):
         if self.level >= MinMaxTree.maxdepth:
             return 0
@@ -58,32 +64,48 @@ class MinMaxTree:
         if self.level==0:
             print('Found {} valid moves.'.format(len(validMoves)))
         nodes_added=0
+        hasTerm = False
         for vm in validMoves:
             child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, 
                                blackModel=self.blackModel, whiteModel=self.whiteModel, 
-                               level=self.level+1, value=vm['term'], moveseries=vm['ms'], cache=self.cache)
+                               level=self.level+1, moveseries=vm['ms'], cache=self.cache)
             child.i = vm['x']
             child.j = vm['y']
             #print('{}'.format(child.moveseries))
             nodes_added+=1
             if vm['term'] is None:
                 self.children.append(child)
+                if hasTerm and not self.isblack:
+                    print('{} White can escape.'.format(child.moveseries))
                 if self.level>0:
                     nodes_added+=child.extend_tree()
+                    if len(child.children)==1 and child.children[0].terminal and not child.terminal:
+                        #print('{}: Propagating terminal case to {}.'.format(child.children[0].moveseries, child.moveseries))
+                        child.terminal=True
+                        child.value = None
+                        #child.value = child.children[0].value
             else:
                 child.terminal = True
                 if self.isblack:
-                    print('{} is TERMINAL. I want that'.format(child.moveseries))
                     self.children=[child]
                     return 1
+
+        if not self.isblack:
+            nonterms = [x for x in self.children if not x.terminal]
+            terms = [x for x in self.children if x.terminal]
+            if len(nonterms)>0 and len(terms)>0:
+                print('{}: White evades!'.format(nonterms[0].moveseries))
+                self.children = nonterms
         # White is screwed. No non-terminal moves left. 
+        
         if not self.isblack and len(self.children)==0 and len(validMoves)>0:
             vm = validMoves[0]
             print('{} White is screwed.'.format(self.moveseries))
             self.children=[MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, 
                                blackModel=self.blackModel, whiteModel=self.whiteModel, 
-                               level=self.level+1, value=vm['term'], moveseries=vm['ms'], cache=self.cache)]
+                               level=self.level+1, moveseries=vm['ms'], cache=self.cache)]
         if len(self.children)==1 and self.children[0].terminal:
+            print('{}: Assigning terminal value to myself because my only child is terminal'.format(self.children[0].moveseries))
             self.value = self.children[0].value
             self.terminal = True
             
@@ -92,22 +114,22 @@ class MinMaxTree:
             print('Created {} children in {:.1f} seconds.'.format(len(self.children), time.clock()-start))
             start = time.clock()
             print('Evaluating {} moves'.format(len(self.children)))
-            for child in self.children:
-                child.value = self.evaluateMove(child.board, child.i, child.j, self.isblack)
-                print('{}: {}'.format(child.moveseries, child.value))
-            # Search the most likely moves in the proper order
             beam = min(MinMaxTree.beamsize, len(self.children))
-            print('Evaluated {} moves in {:.1f} seconds.'.format(len(self.children), start))
-            start = time.clock()
-            print('Searching {} of them'.format(beam))
             if beam<=len(self.children):
                 children = self.children
             else:
+                for child in self.children:
+                    child.value = self.evaluateMove(child.board, child.i, child.j, self.isblack)
+                    print('{}: {}'.format(child.moveseries, child.value))
                 children= sorted(self.children, key=lambda child: child.value, reverse=(not self.isMinLayer))[:min(MinMaxTree.beamsize, len(self.children)-1)]
+                # Search the most likely moves in the proper order
+                print('Evaluated {} moves in {:.1f} seconds.'.format(len(self.children), start))
+
+            start = time.clock()
             for child in children:
-                cstart=time.clock()
+                #cstart=time.clock()
                 nodes_added+= child.extend_tree()
-                print('  {}: {:.1f} sec.'.format(nodes_added, time.clock()-cstart))
+                #print('  {}: {:.1f} sec.'.format(nodes_added, time.clock()-cstart))
             print('Extended tree by {} nodes in {:.1f} seconds.'.format(nodes_added, time.clock()-start))
         return nodes_added
     
@@ -214,33 +236,73 @@ class MinMaxTree:
                 #self.remoteSpaces.add((i+p-2,j+q-2))
         return False
 
-
     def bestChild(self):
+        if self.children is None or len(self.children)==0:
+            return self
+        if self.terminal:
+            # Already dead
+            return self.children[0]
+        childrenToEvaluate = []
+            
+        for child in self.children:
+            if child.terminal:
+                if self.isblack:
+                    #print ('{} is terminal?'.format(child.moveseries))
+                    return child
+            else:
+                childsBestChild = child.bestChild()
+                if childsBestChild is child:
+                    # A leaf! Also, non-terminal 
+                    if self.level==0:
+                        childrenToEvaluate.append(child)
+                elif childsBestChild.terminal:
+                    # White is screwed, its next move will be terminal
+                    # Not sure this condition is even possible
+                    child.terminal=True
+                    child.value=None
+                    if self.isblack:
+                        return child
+                        print('{} Black has white cornered.'.format(child.moveseries))
+                else:
+                    if self.level==0:
+                        childrenToEvaluate.append(child)
+        # White's turn, but there's nowhere to go
+        if not self.isblack and self.level==0 and len(childrenToEvaluate)==0 and len(self.children)>0:
+            self.children[0].terminal=True
+            return self.children[0]
+        best=None
+        for child in childrenToEvaluate:
+            if child.terminal:
+                raise Exception('Internal Error - not expecting terminal cases here.')
+            if child.value is None:
+                child.value = self.evaluateMove(child.board, child.i, child.j, self.isblack)
+            if best is None:
+                best = child
+            if self.isMinLayer and child.value<best.value:
+                best = child
+            if not self.isMinLayer and child.value>best.value:
+                best = child
+        if best is None:
+            if len(self.children)>0:
+                return self.children[0]
+            return self
+        return best
+
+
+    def bestChildOld(self):
         minmax = -100000.0
         best = self
-        #if self.level==0:
-        #    print('Searching for best move ({} nodes, depth={}).'.format(len(self.children), MinMaxTree.maxdepth))
         if self.isMinLayer:
             minmax = 100000.0
         childrenToEvaluate = []
-        #if self.level>2:
-        #    print('LEVEL {}: {}'.format(self.level, self.moveseries))
-        '''
-        if not self.isblack and self.level==0:
-            allTerm = True
-            for c in self.children:
-                for cc in c.children:
-                    if not cc.terminal:
-                        allTerm = False
-            if allTerm:
-                print('I have {} children, all dead.'.format(0 if self.children is None else len(self.children)))
-        '''
         for c in self.children:
             b = c.bestChild()
             c.value = b.value
         
             if b is None:
                 raise Exception('Unexpected error - child not found.')
+            # b should either be a child which is a leaf or the child's best child
+            
             if (b.value is None or not b.terminal):
                 # Evaluate leaves first
                 childrenToEvaluate.append(b)
@@ -319,17 +381,18 @@ class MinMaxTree:
         self.level=newlevel
         start = time.clock()
         nodes_added=0
-        if self.children==None or len(self.children)==0:
+        if self.children is None or len(self.children)==0:
             nodes_added+=self.extend_tree()
         else:
             for child in self.children:
                 nodes_added+=child.promote(newlevel+1)
-            if self.level==0:
-                print('Promotion added {} nodes in {:.1f} seconds'.format(nodes_added, time.clock()-start))
+            #if self.level==0:
+            #    print('Promotion added {} nodes in {:.1f} seconds'.format(nodes_added, time.clock()-start))
+                #print('There are now {} nodes total.'.format(self.node_count()))
         return nodes_added
 
     def decideNextMove(self):
         c = self.bestChild()
-        if c==self:
+        if c is self:
             return None
         return c

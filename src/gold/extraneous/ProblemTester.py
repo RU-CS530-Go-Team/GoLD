@@ -29,7 +29,7 @@ class YouLoseException(Exception):
     def __str__(self):
         return repr(self.value)
     
-def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None):
+def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None, nodecount=None):
     if w<0:
         liveWGr = determineLife(move, False)
         w = len(liveWGr)
@@ -44,6 +44,9 @@ def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None):
         timeS = ''
     else:
         timeS = ' ({:.1f} seconds).'.format(etime)
+        if nodecount is not None:
+            timeS = ' ({:.1f} seconds, {} nodes).'.format(etime, nodecount)
+            
     if sw<0 and sb<0:
         print('{}: w={}, b={}, nw={}, nb={}{}{}'.format(label,w,b,len(move.white_stones),len(move.black_stones),probS, timeS))
     else:
@@ -107,8 +110,10 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     mmt.extend_tree()
     passed = False
-    while( move not in solutionStates and pathLength<2*longestPath+1):
+    while( move not in solutionStates and pathLength<2*longestPath+5):
         color = 'B' if isblack else 'W'
+        if mmt.isblack != isblack:
+            raise ValueError('Ahem!')
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
@@ -119,18 +124,24 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                 raise YouLoseException('Two passes in a row. You Lose!', path)
             passed=True
             continue
-        
         mmt = nextMove
         try:
             move.place_stone(mmt.i, mmt.j, isblack)
         except IllegalMove as im:
             print ('{}: decided it was the next move, no recovery.'.format(im))
-            raise im
+            return path
         path.append(move.clone())
         #b = len(determineLife(move,True))
         b = len(determineLife(move, True))
         w = len(determineLife(move, False))
-        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=mmt.value, etime=time.clock()-start)
+        if mmt.value is None: 
+            if mmt.terminal:
+                prob = 5.0
+            else:
+                prob = mmt.value +10.0
+        else:
+            prob = mmt.value
+        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
         start = time.clock()        
 
         if move in terminalIncorrectStates:
@@ -145,7 +156,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
             else:
                 raise YouLoseException('Black lives!! You Lose!!', path)
         pathLength = pathLength+1
-        if pathLength>=2*longestPath+1:
+        if pathLength>=2*longestPath+5:
             if not isBtL:
                 start = time.clock()
                 print('Searching for black to live...')
@@ -166,7 +177,9 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
             
         isblack = not isblack
         mmt.promote()
-
+            
+    raise YouLoseException('Too many moves, you lose!!', path)
+        
 
 def parse_problem_filename(probfile):
     subpaths = probfile.split('/')
@@ -228,10 +241,8 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
     return result
             
 def load_model(modelFile, modelType, scalerFile):
-    print('Loading model and scaler files...')
     model = Model(modelFile, modelType)
     model.setScaler(scalerFile)
-    print('Model and scaler files ready!')
     return model
 
 def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdepth=3, show=False):
@@ -324,6 +335,7 @@ if __name__ == '__main__':
     parser.add_argument('problem_dir_or_file', nargs='+', help='path to problem directory or file')
     args = parser.parse_args()
     
+    print('Loading model and scaler files...')
     # Sample main... make your own if you want something different
     # Just import load_model and test_problems
     modelDir = args.model_dir
