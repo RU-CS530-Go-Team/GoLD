@@ -129,7 +129,7 @@ class MoveTrainer():
             end = time.clock()
             intvl = end - start
             print('Feature extraction took %.03f seconds' %intvl)
-    
+
 ''' merge csv2 into csv1 '''
 def merge_csv(csv1, csv2, csv3=None):
     if csv3 == None:
@@ -147,7 +147,7 @@ def merge_csv(csv1, csv2, csv3=None):
             moveid = row['_MOVE']
             key = '{}.{}.{}.{}'.format(difficulty,pt,probid,moveid)
             f2values[key]=row
-        for row in rdr1: 
+        for row in rdr1:
             difficulty = row['_DI']
             pt = row['_PT']
             probid = row['_PROBID']

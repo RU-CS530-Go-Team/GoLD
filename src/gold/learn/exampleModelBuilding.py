@@ -24,7 +24,7 @@ temp.buildModelSVM("extraneous/games/train/modelSVMWtK.txt")
 temp.evaluateModel("extraneous/games/train/modelSVMWtK.txt")
 
 #Scale data and use SVM
-temp = ModelBuilder(["extraneous/games/train/featuresBtL.csv"],classType)
+temp = ModelBuilder(["extraneous/games/train/featurestL.csv"],classType)
 temp.buildScaler("extraneous/games/train/featuresBtLScaler.txt")
 temp.scaleData()
 temp.buildModelSVM("extraneous/games/train/modelSVM.txt")

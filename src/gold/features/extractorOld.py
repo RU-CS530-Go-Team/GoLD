@@ -4,6 +4,7 @@ Created on Dec 4, 2014
 @author: JBlackmore
 '''
 import sys
+sys.path.append("/Users/zacharydaniels/Documents/GoLD/src/")
 from numpy import ndarray, float64
 from types import ListType, IntType, FloatType, StringType
 import csv
@@ -128,7 +129,6 @@ class FeatureExtractor():
                         outcome = row['_SOLUTION']
                     else:
                         outcome = '0'
-                # ?-to-?
                 else:
                     outcome = row['_SOLUTION']
 
@@ -143,38 +143,26 @@ class FeatureExtractor():
                     wwtr.writerow(newrow)
 
 if __name__ == '__main__':
-    base = '/Users/zacharydaniels/Desktop/data2/'
-
+    base = '/Users/zacharydaniels/Desktop/data/'#'c:/users/jblackmore/documents/development/rutgers/gold/problems/merge/'
     fe = FeatureExtractor()
 
     csvfname = base + 'trainfeatures.csv'
     newcsvname = base + 'trainfeaturesBtL_T.csv'
-    #fe.convert_csv_for_terminal_test(csvfname, 1, newcsvname)
+    fe.convert_csv_for_terminal_test(csvfname, 1, newcsvname)
     newcsvname = base + 'trainfeaturesWtK_T.csv'
-    #fe.convert_csv_for_terminal_test(csvfname, 2, newcsvname)
+    fe.convert_csv_for_terminal_test(csvfname, 2, newcsvname)
     btlcsvname = base + 'trainfeaturesBtL.csv'
     wtkcsvname = base + 'trainfeaturesWtK.csv'
     fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)
 
     csvfname = base+'devfeatures.csv'
     btlcsvname = base+'devfeaturesBtL_T.csv'
-    #fe.convert_csv_for_terminal_test(csvfname, 1, btlcsvname)
+    fe.convert_csv_for_terminal_test(csvfname, 1, btlcsvname)
     wtkcsvname = base+'devfeaturesWtK_T.csv'
-    #fe.convert_csv_for_terminal_test(csvfname, 2, wtkcsvname)
-
+    fe.convert_csv_for_terminal_test(csvfname, 2, wtkcsvname)
     btlcsvname = base + 'devfeaturesBtL.csv'
     wtkcsvname = base + 'devfeaturesWtK.csv'
     fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)
-
-    '''csvfname = base+'testfeatures.csv'
-    btlcsvname = base+'testfeaturesBtL_T.csv'
-    #fe.convert_csv_for_terminal_test(csvfname, 1, btlcsvname)
-    wtkcsvname = base+'testfeaturesWtK_T.csv'
-    #fe.convert_csv_for_terminal_test(csvfname, 2, wtkcsvname)
-
-    btlcsvname = base + 'testfeaturesBtL.csv'
-    wtkcsvname = base + 'testfeaturesWtK.csv'
-    fe.split_csv_by_probtype(csvfname, btlcsvname,wtkcsvname)'''
     '''
     csvfname = 'c:/users/jblackmore/documents/development/rutgers/gold/problems/resplit/trainfeatures_with_nlg.csv'
     newcsvname = 'c:/users/jblackmore/documents/development/rutgers/gold//problems/resplit/trainfeaturesBtL_T.csv'
