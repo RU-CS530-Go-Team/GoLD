@@ -193,7 +193,7 @@ def parse_problem_filename(probfile):
     problemId = problemId.split('.')[-2]
     return [problemId, difficulty]
 
-def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(), show=True):
+def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(), show=False):
     ''' Returns 1 if problem is solved
         Returns 0 if problem could not be solved
         Returns -1 if problem could not be executed
@@ -277,7 +277,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
             if len(problemDir)<3:
                 print('Not a dir or problem file: {}'.format(problemDir))
             elif problemDir[-3:]=='sgf':
-                result = call_test_problem(problemDir, modelBtL, modelWtK, outputfile, skip=problemsDone)
+                result = call_test_problem(problemDir, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show)
                 if result>=0:
                     numTotal+=1
                     if result>0:
@@ -295,7 +295,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                     files = glob(probdiff+'/*.sgf')
                     for probfile in files:
                         
-                        result = call_test_problem(probfile, modelBtL, modelWtK, outputfile, skip=problemsDone)
+                        result = call_test_problem(probfile, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show)
                         if result>=0:
                             numTotal+=1
                             if result>0:
