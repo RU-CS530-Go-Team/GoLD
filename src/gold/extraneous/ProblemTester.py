@@ -331,11 +331,12 @@ if __name__ == '__main__':
     parser.add_argument('--wtk_model', '-w', default='RF100', help='Short name of machine learning model to use for white-to-kill, e.g. if RF100, filename will be modelRF100WtK.txt')
     parser.add_argument('--btl_model_type', default=1, type=int, required=False, choices=[0,1], help='BtL model type (0=SVM, 1=other)')
     parser.add_argument('--wtk_model_type', default=1, type=int, required=False, choices=[0,1], help='WtK model type (0=SVM, 1=other)')
+    parser.add_argument('--beam_size', default=50, metavar='int', type=int, choices=[x+1 for x in range(100)], help='Breadth limit for top level search')
     parser.add_argument('model_dir', help='location of machine learning models')
     parser.add_argument('problem_dir_or_file', nargs='+', help='path to problem directory or file')
     args = parser.parse_args()
     
-    print('Loading model and scaler files...')
+    
     # Sample main... make your own if you want something different
     # Just import load_model and test_problems
     modelDir = args.model_dir
@@ -349,8 +350,11 @@ if __name__ == '__main__':
     modelType = args.wtk_model_type 
     scalerFile = modelDir+'/trainfeaturesWtKScaler.txt'
     modelWtK = load_model(modelFile, modelType, scalerFile)
+    print('Loading model and scaler files...')
     problemDirs = args.problem_dir_or_file
 
+    MinMaxTree.beamsize = args.beam_size
+    
     if args.output_file is None:
         outputfile = modelDir+'/problem-test-results.txt'
     else:
