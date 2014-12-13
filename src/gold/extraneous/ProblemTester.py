@@ -29,7 +29,7 @@ class YouLoseException(Exception):
     def __str__(self):
         return repr(self.value)
     
-def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None, nodecount=None):
+def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, moves=None, prob=None, etime=None, nodecount=None):
     if w<0:
         liveWGr = determineLife(move, False)
         w = len(liveWGr)
@@ -45,7 +45,7 @@ def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None, nod
     else:
         timeS = ' ({:.1f} seconds).'.format(etime)
         if nodecount is not None:
-            timeS = ' ({:.1f} seconds, {} nodes).'.format(etime, nodecount)
+            timeS = ' ({} moves, {:.1f} seconds, {} nodes).'.format(moves, etime, nodecount)
             
     if sw<0 and sb<0:
         print('{}: w={}, b={}, nw={}, nb={}{}{}'.format(label,w,b,len(move.white_stones),len(move.black_stones),probS, timeS))
@@ -139,7 +139,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                 prob = nextMove.value +10.0
         else:
             prob = nextMove.value
-        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, b=b, w=w,prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
+        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, b=b, w=w, moves=len(mmt.children),prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
         mmt = nextMove
         path.append(move.clone())
         start = time.clock()        
@@ -210,18 +210,13 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
 
     try:
         mtp = MoveTreeParser(probfile) 
-        if show:
-            ui = Launcher(380,380,50,max(mtp.start.x, mtp.start.y))
         isBtL = (mtp.problemType == 1 or mtp.problemType==3)
         if not isBtL:
             return -1
         problemType = '1' if isBtL else '2'
         print probfile
+        start = time.clock()
         path = test_problem(mtp, modelBtL, modelWtK)
-        if outputfile is not None:
-            fout = open(outputfile, 'a')
-            fout.write('{},{},{},1\n'.format(problemId, problemType,difficulty))
-            fout.close()
         result= 1
     except UnspecifiedProblemType:
         result= -1
@@ -230,14 +225,18 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
         result= -1
     except YouLoseException as yle:
         print(yle)
-        if outputfile is not None:
-            fout = open(outputfile, 'a')
-            fout.write('{},{},{},0\n'.format(problemId, problemType,difficulty))
-            fout.close()
         path = yle.path
         result= 0
-    if show and result>=0:
-        ui.showPath(path)
+    if result>=0:
+        if outputfile is not None:
+            fout = open(outputfile, 'a')
+            fout.write('{},{},{},'.format(problemId, problemType,difficulty))
+            fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
+            fout.write('{},{}\n'.format(len(path), time.clock()-start, result))
+            fout.close()
+        if show and result>=0:
+            ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
+            ui.showPath(path)
     return result
             
 def load_model(modelFile, modelType, scalerFile):
@@ -259,12 +258,12 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
         except Exception as e:
             print(e)
             with open(outputfile, 'w') as fout:
-                fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
-
+                fout.write('PROBLEM,TYPE,DIFFICULTY,SEARCH_DESC,DEPTH,BEAMSIZE,MOVE_COUNT,TOTAL_TIME_SEC,RESULT\n')
+                
     elif not isfile(outputfile):
         with open(outputfile, 'w') as fout:
-            fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
-        
+            fout.write('PROBLEM,TYPE,DIFFICULTY,SEARCH_DESC,DEPTH,BEAMSIZE,MOVE_COUNT,TOTAL_TIME_SEC,RESULT\n')
+                    
     #with open(outputfile, 'a') as fout:
     seed(1234567890)
     totalNumCorrect = 0
@@ -358,6 +357,6 @@ if __name__ == '__main__':
     if args.output_file is None:
         outputfile = modelDir+'/problem-test-results.txt'
     else:
-        outputfile = args.outputfile
+        outputfile = args.output_file
     test_problems(modelBtL, modelWtK, problemDirs, outputfile, rerun=args.rerun_problems, maxdepth=args.max_depth, show=args.show_board)
     
