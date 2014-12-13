@@ -121,7 +121,7 @@ class MinMaxTree:
                 start = time.clock()
                 for child in self.children:
                     child.value = self.evaluateMove(child.board, child.i, child.j, self.isblack)
-                    print('{}: {:.3f}'.format(child.moveseries, child.value))
+                    #print('{}: {:.3f}'.format(child.moveseries, child.value))
                 self.children= sorted(self.children, key=lambda child: child.value, reverse=(not self.isMinLayer))[:min(MinMaxTree.beamsize, len(self.children)-1)]
                 # Search the most likely moves in the proper order
                 print('Evaluated {} moves in {:.1f} seconds.'.format(len(self.children), time.clock()-start))
