@@ -29,7 +29,7 @@ class YouLoseException(Exception):
     def __str__(self):
         return repr(self.value)
     
-def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None):
+def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, moves=None, prob=None, etime=None, nodecount=None):
     if w<0:
         liveWGr = determineLife(move, False)
         w = len(liveWGr)
@@ -44,6 +44,9 @@ def print_move(label, move, sw=-1, sb=-1, w=-1, b=-1, prob=None, etime=None):
         timeS = ''
     else:
         timeS = ' ({:.1f} seconds).'.format(etime)
+        if nodecount is not None:
+            timeS = ' ({} moves, {:.1f} seconds, {} nodes).'.format(moves, etime, nodecount)
+            
     if sw<0 and sb<0:
         print('{}: w={}, b={}, nw={}, nb={}{}{}'.format(label,w,b,len(move.white_stones),len(move.black_stones),probS, timeS))
     else:
@@ -107,8 +110,10 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         mmt = MinMaxTree(move, False, isBtL, blackModel=modelBtL, whiteModel=modelWtK)
     mmt.extend_tree()
     passed = False
-    while( move not in solutionStates and pathLength<2*longestPath+1):
+    while( move not in solutionStates and pathLength<2*longestPath+5):
         color = 'B' if isblack else 'W'
+        if mmt.isblack != isblack:
+            raise ValueError('Ahem!')
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
@@ -119,18 +124,24 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                 raise YouLoseException('Two passes in a row. You Lose!', path)
             passed=True
             continue
-        
-        mmt = nextMove
         try:
-            move.place_stone(mmt.i, mmt.j, isblack)
+            move.place_stone(nextMove.i, nextMove.j, isblack)
         except IllegalMove as im:
             print ('{}: decided it was the next move, no recovery.'.format(im))
-            raise im
-        path.append(move.clone())
+            return path
         #b = len(determineLife(move,True))
         b = len(determineLife(move, True))
         w = len(determineLife(move, False))
-        print_move('{}({},{})'.format(color,mmt.i, mmt.j), move, sb=sb, sw=sw, b=b, w=w,prob=mmt.value, etime=time.clock()-start)
+        if nextMove.value is None: 
+            if nextMove.terminal:
+                prob = 5.0
+            else:
+                prob = nextMove.value +10.0
+        else:
+            prob = nextMove.value
+        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, b=b, w=w, moves=len(mmt.children),prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
+        mmt = nextMove
+        path.append(move.clone())
         start = time.clock()        
 
         if move in terminalIncorrectStates:
@@ -145,7 +156,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
             else:
                 raise YouLoseException('Black lives!! You Lose!!', path)
         pathLength = pathLength+1
-        if pathLength>=2*longestPath+1:
+        if pathLength>=2*longestPath+5:
             if not isBtL:
                 start = time.clock()
                 print('Searching for black to live...')
@@ -166,7 +177,9 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
             
         isblack = not isblack
         mmt.promote()
-
+            
+    raise YouLoseException('Too many moves, you lose!!', path)
+        
 
 def parse_problem_filename(probfile):
     subpaths = probfile.split('/')
@@ -180,7 +193,7 @@ def parse_problem_filename(probfile):
     problemId = problemId.split('.')[-2]
     return [problemId, difficulty]
 
-def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(), show=True):
+def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(), show=False):
     ''' Returns 1 if problem is solved
         Returns 0 if problem could not be solved
         Returns -1 if problem could not be executed
@@ -197,18 +210,13 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
 
     try:
         mtp = MoveTreeParser(probfile) 
-        if show:
-            ui = Launcher(380,380,50,max(mtp.start.x, mtp.start.y))
         isBtL = (mtp.problemType == 1 or mtp.problemType==3)
         if not isBtL:
             return -1
         problemType = '1' if isBtL else '2'
         print probfile
+        start = time.clock()
         path = test_problem(mtp, modelBtL, modelWtK)
-        if outputfile is not None:
-            fout = open(outputfile, 'a')
-            fout.write('{},{},{},1\n'.format(problemId, problemType,difficulty))
-            fout.close()
         result= 1
     except UnspecifiedProblemType:
         result= -1
@@ -217,21 +225,23 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
         result= -1
     except YouLoseException as yle:
         print(yle)
-        if outputfile is not None:
-            fout = open(outputfile, 'a')
-            fout.write('{},{},{},0\n'.format(problemId, problemType,difficulty))
-            fout.close()
         path = yle.path
         result= 0
-    if show and result>=0:
-        ui.showPath(path)
+    if result>=0:
+        if outputfile is not None:
+            fout = open(outputfile, 'a')
+            fout.write('{},{},{},'.format(problemId, problemType,difficulty))
+            fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
+            fout.write('{},{}\n'.format(len(path), time.clock()-start, result))
+            fout.close()
+        if show and result>=0:
+            ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
+            ui.showPath(path)
     return result
             
 def load_model(modelFile, modelType, scalerFile):
-    print('Loading model and scaler files...')
     model = Model(modelFile, modelType)
     model.setScaler(scalerFile)
-    print('Model and scaler files ready!')
     return model
 
 def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdepth=3, show=False):
@@ -248,12 +258,12 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
         except Exception as e:
             print(e)
             with open(outputfile, 'w') as fout:
-                fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
-
+                fout.write('PROBLEM,TYPE,DIFFICULTY,SEARCH_DESC,DEPTH,BEAMSIZE,MOVE_COUNT,TOTAL_TIME_SEC,RESULT\n')
+                
     elif not isfile(outputfile):
         with open(outputfile, 'w') as fout:
-            fout.write('PROBLEM,TYPE,DIFFICULTY,SCORE\n')
-        
+            fout.write('PROBLEM,TYPE,DIFFICULTY,SEARCH_DESC,DEPTH,BEAMSIZE,MOVE_COUNT,TOTAL_TIME_SEC,RESULT\n')
+                    
     #with open(outputfile, 'a') as fout:
     seed(1234567890)
     totalNumCorrect = 0
@@ -266,7 +276,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
             if len(problemDir)<3:
                 print('Not a dir or problem file: {}'.format(problemDir))
             elif problemDir[-3:]=='sgf':
-                result = call_test_problem(problemDir, modelBtL, modelWtK, outputfile, skip=problemsDone)
+                result = call_test_problem(problemDir, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show)
                 if result>=0:
                     numTotal+=1
                     if result>0:
@@ -284,7 +294,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                     files = glob(probdiff+'/*.sgf')
                     for probfile in files:
                         
-                        result = call_test_problem(probfile, modelBtL, modelWtK, outputfile, skip=problemsDone)
+                        result = call_test_problem(probfile, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show)
                         if result>=0:
                             numTotal+=1
                             if result>0:
@@ -320,9 +330,11 @@ if __name__ == '__main__':
     parser.add_argument('--wtk_model', '-w', default='RF100', help='Short name of machine learning model to use for white-to-kill, e.g. if RF100, filename will be modelRF100WtK.txt')
     parser.add_argument('--btl_model_type', default=1, type=int, required=False, choices=[0,1], help='BtL model type (0=SVM, 1=other)')
     parser.add_argument('--wtk_model_type', default=1, type=int, required=False, choices=[0,1], help='WtK model type (0=SVM, 1=other)')
+    parser.add_argument('--beam_size', default=50, metavar='int', type=int, choices=[x+1 for x in range(100)], help='Breadth limit for top level search')
     parser.add_argument('model_dir', help='location of machine learning models')
     parser.add_argument('problem_dir_or_file', nargs='+', help='path to problem directory or file')
     args = parser.parse_args()
+    
     
     # Sample main... make your own if you want something different
     # Just import load_model and test_problems
@@ -337,11 +349,14 @@ if __name__ == '__main__':
     modelType = args.wtk_model_type 
     scalerFile = modelDir+'/trainfeaturesWtKScaler.txt'
     modelWtK = load_model(modelFile, modelType, scalerFile)
+    print('Loading model and scaler files...')
     problemDirs = args.problem_dir_or_file
 
+    MinMaxTree.beamsize = args.beam_size
+    
     if args.output_file is None:
         outputfile = modelDir+'/problem-test-results.txt'
     else:
-        outputfile = args.outputfile
+        outputfile = args.output_file
     test_problems(modelBtL, modelWtK, problemDirs, outputfile, rerun=args.rerun_problems, maxdepth=args.max_depth, show=args.show_board)
     
