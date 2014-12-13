@@ -230,7 +230,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
     if result>=0:
         if outputfile is not None:
             fout = open(outputfile, 'a')
-            fout.write('{},{},{},'.format(problemId, problemType,difficulty))
+            fout.write('{},{},{},{},{},'.format(problemId, problemType,difficulty,mtp.start.x, mtp.start.y))
             fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
             fout.write('{},{:.1f},{}\n'.format(len(path), time.clock()-start, result))
             fout.close()
@@ -258,11 +258,11 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
         except Exception as e:
             print(e)
             with open(outputfile, 'w') as fout:
-                fout.write('PROBLEM,TYPE,DIFFICULTY,SEARCH_DESC,DEPTH,BEAMSIZE,MOVE_COUNT,TOTAL_TIME_SEC,RESULT\n')
+                fout.write('PROBLEM,TYPE,DIFFICULTY,X,Y,SEARCH,DEPTH,BEAM,MOVES,TIME,RESULT\n')
                 
     elif not isfile(outputfile):
         with open(outputfile, 'w') as fout:
-            fout.write('PROBLEM,TYPE,DIFFICULTY,SEARCH_DESC,DEPTH,BEAMSIZE,MOVE_COUNT,TOTAL_TIME_SEC,RESULT\n')
+            fout.write('PROBLEM,TYPE,DIFFICULTY,X,Y,SEARCH,DEPTH,BEAM,MOVES,TIME,RESULT\n')
                     
     #with open(outputfile, 'a') as fout:
     seed(1234567890)
