@@ -144,8 +144,10 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         if move in solutionStates:
             print('Solution matched!! You Win!! ')
             return path
-        if mmt.terminal:
-            print('You Win!!! Black has groups that are unconditionally alive!')
+        if mmt.sb is None:
+            mmt.sb = len(determineLife(mmt.board,isblack))
+        if mmt.sb>sb:
+            print('You win!!! Black has groups that are unconditionally alive!')
         pathLength = pathLength+1
         if pathLength<maxpathlength:
             mmt.promote()
