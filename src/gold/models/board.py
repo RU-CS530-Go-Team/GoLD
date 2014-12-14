@@ -93,7 +93,7 @@ class Board:
             stones = [{x} for x in self.white_stones]
         # union-find
 
-    def is_ko(self, x, y, isblack):
+    def is_ko(self):
         return self.hash() in self.prior_moves
 
     def alone(self, x, y, isblack):
@@ -119,7 +119,7 @@ class Board:
         stones = self.black_stones if isblack else self.white_stones
         if (x, y) not in stones:
             raise IllegalMove("Suicide is not allowed")
-        elif self.is_ko(x, y, isblack):
+        elif self.is_ko():
             self.black_stones, self.white_stones, self.prior_moves = old
             raise IllegalMove("Ko")
         self.prior_moves.append(self.hashval)
