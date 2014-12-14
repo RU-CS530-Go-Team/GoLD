@@ -166,6 +166,51 @@ def load_problem_start(f):
     mtp = MoveTreeParser(f)
     return mtp.start
 
+def load_problem_paths(f):
+    mtp = MoveTreeParser(f)
+    #print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
+    sn = mtp.getSolutionNodes()
+    inc = mtp.getIncorrectNodes()
+    probtyp = mtp.getProblemType()
+    if probtyp == 1 or probtyp == 3: #Black to live
+        probtyp = 1
+    elif probtyp == 2 or probtyp == 4: #White to kill
+        probtyp = 2
+    else: #Error should be thrown, but just in case it isn't
+        probtyp = 0
+    paths = mtp.getAllPaths()
+    boards = []
+    for path in paths:
+        start = mtp.start
+        if( len(path)>100 ):
+            print('START NEW PATH (len={}; {})'.format(len(path),f.split('/')[-1]))
+        move = None
+        outcome = 0
+        liveWGr = determineLife(start, False)
+        liveBGr = determineLife(start, True)
+        w = len(liveWGr)
+        b = len(liveBGr)
+        boards.append(start)
+        print('START: w={}, b={}, nw={}, nb={}'.format(w,b,len(start.white_stones),len(start.black_stones)))
+        for mid in path:
+            move_dict = mtp.formatMove(mtp.moveID[mid])
+            saysblack = move_dict['isBlack'] #move_str[0:1]=='B'
+            #print('{}''s turn'.format('black' if saysblack else 'white'))
+            move_y = move_dict['y'] #ord(move_str[2]) - ord('a')
+            move_x = move_dict['x'] #ord(move_str[3]) - ord('a')
+            move = start.clone()
+            try:
+                move.place_stone(move_x, move_y, saysblack)
+                boards.append(move)
+                color = 'B' if saysblack else 'W'
+                print('{}({},{}): w={}, b={}, nw={}, nb={}'.format(color,move_x,move_y,w,b,len(move.white_stones),len(move.black_stones)))
+            except IllegalMove as e:
+                print('{}: ({},{})'.format(e, move_x, move_y))
+            start = move
+        if outcome==1: 
+            return move
+    return boards
+
 def load_problem_solution(f):
     mtp = MoveTreeParser(f)
     #print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
@@ -240,10 +285,11 @@ def load_problem_solution(f):
 if __name__ == '__main__':
     print("Starting GoLD...")
     if len(sys.argv)>1:
-        solution = load_problem_start(sys.argv[1])
-        ui = Launcher(380,380,50,19,board=solution)
+        #solution = load_problem_start(sys.argv[1])
+        paths = load_problem_paths(sys.argv[1])
+        ui = Launcher(400,400,50,19,board=paths[0])
+        ui.showPath(paths)
     else:
         ui = Launcher(400,400,50,19)
-    
-    ui.drawBoard()
-    ui.mainloop()
+        ui.drawBoard()
+        ui.mainloop()
