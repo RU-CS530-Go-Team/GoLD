@@ -118,6 +118,7 @@ class Board:
         self.update(isblack)
         stones = self.black_stones if isblack else self.white_stones
         if (x, y) not in stones:
+            self.black_stones, self.white_stones, self.prior_moves = old
             raise IllegalMove("Suicide is not allowed")
         elif self.is_ko():
             self.black_stones, self.white_stones, self.prior_moves = old
