@@ -98,7 +98,18 @@ class Launcher:
         self.ovals.append(self.C.create_oval(x1, y1, x2, y2, fill=color, tags=color))
         if( alive ):
             self.ovals.append(self.C.create_oval(x0-2, y0-2, x0+1, y0+1, fill='green', tags=color))
-
+    def setBoardIndex(self, index):
+        self.setBoard(self.boards[int(index)-1])
+        self.drawBoard()
+        
+    def showPath(self, boards):
+        self.boards = boards
+        scale = Scale(self.master, orient=HORIZONTAL, from_=1, to=len(boards), command=self.setBoardIndex)
+        scale.pack(side=BOTTOM)
+        self.setBoard(boards[0])
+        self.drawBoard()
+        self.mainloop()
+        
     def drawPoint(self, i, j):
         [x0, y0] = self.computeCoord(i, j)
         x1 = x0+5

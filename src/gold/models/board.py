@@ -1,5 +1,6 @@
 from array import array
 from copy import deepcopy
+from random import randint
 
 class IllegalMove(Exception):
     def __init__(self, value):
@@ -20,7 +21,9 @@ class Board:
         self.white_stones = []
         self.black_stones = []
         self.prior_moves = []
-
+        self.zobrist = self.init_zobrist()
+        self.hashval = self.hash()
+        
     def __str__(self):
         ans = ""
         for i in range(self.x):
@@ -34,9 +37,29 @@ class Board:
             ans += "\n"
         return ans
     
+    def init_zobrist(self):
+        hashboard = []
+        for i in range(self.x * self.y):
+            q = randint(0, (2 ** 50) - 1)
+            w = randint(0, (2 ** 50) - 1)
+            hashboard.append([q, w])
+        return hashboard
+    
+    def randbin(self, d): 
+        mx = (2 ** d) - 1 
+        b = randint(0, mx)
+        return b#[2:].rjust(d, '0') 
+    
     def __hash__(self):
-        return hash(tuple([tuple(sorted(self.black_stones)), tuple(sorted(self.white_stones)), self.x, self.y]))
-        #return hash(tuple([sorted(tuple(board.black_stones)), sorted(tuple(board.white_stones)), self.x, self.y]))
+        return self.hash()
+    
+    def hash(self, old = 0):
+        ans = old
+        for i, v in sorted(self.black_stones):
+            ans = ans ^ self.zobrist[(i) * (self.y) + v][0]
+        for i, v in sorted(self.white_stones):
+            ans = ans ^ self.zobrist[(i) * (self.y) + v][0]
+        return ans 
     
     def __eq__(self, other):
         if other is None:
@@ -112,7 +135,8 @@ class Board:
         if (x, y) not in stones:
             self.black_stones, self.white_stones, self.prior_moves = old
             raise IllegalMove("Suicide is not allowed")
-
+        self.hashval = self.hash()
+        
     def update(self, isblack):
         if isblack:
             first = self.white_stones

@@ -36,8 +36,10 @@ def determineLife(board, color):
                 regions[y].append((x_i, y_i))
             except:
                 regions[y] = [(x_i, y_i)]
+                
     groups_by_region = {}
     for current_region in regions:
+        if not enclosed(regions[current_region], connected_groups): continue
         for current_group in initial_groups:
             if StoneGrouper(stones).is_group_adjacent(current_group, regions[current_region]):
                 try:
@@ -143,6 +145,16 @@ def calculate_liberties(group, board):
                 elif not (cm in board.black_stones or cm in board.white_stones):
                     current_liberties.add(cm)
         return list(current_liberties)
+    
+def enclosed(region, groups):
+    for current_group in groups:
+        max_X = max([x[0] for x in current_group]) +1
+        max_Y = max([x[1] for x in current_group]) +1
+        min_X = min([x[0] for x in current_group]) -1
+        min_Y = min([x[1] for x in current_group]) -1
+        if all(x < max_X and x > min_X and y < max_Y and y > min_Y for x, y in region): return True
+    return False
+        
     
 #temp_board = Board(4, 8)
 #emp_board.black_stones = [(0, 0), (1, 1)]

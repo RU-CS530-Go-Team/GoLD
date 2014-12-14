@@ -11,8 +11,12 @@ from sklearn import qda
 from sklearn import linear_model
 from gold.learn.FeatureSelector import FeatureSelector
 from sklearn.feature_selection import RFE
+from sklearn.feature_selection import RFECV
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import label_binarize
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
 
 class ModelBuilder():
   def __init__(self,inputFiles,classType=0):
@@ -25,6 +29,7 @@ class ModelBuilder():
       data = np.loadtxt(open(dataFile,"rb"),delimiter=",",skiprows=1)
       #instancesTemp = data[:,:data.shape[1]-2]
       instancesTemp = data[:,:data.shape[1]-1]
+      classesTemp = None
       if classType == 0:
         classesTemp = data[:,data.shape[1]-2]
       elif classType == 1:
@@ -45,6 +50,70 @@ class ModelBuilder():
     f = open(outputFile,"w")
     f.write(featureSelectionData)
     f.close()
+
+  def buildFeatureSelectorAutomatic(self,outputFile,opttype = 5):
+    model = svm.LinearSVC(class_weight='auto')
+
+    if opttype == 1:
+      rfecv = RFECV(estimator=model, step=1, cv=cross_validation.StratifiedKFold(self.classes, 2),
+                scoring='roc_auc',verbose = 5)
+      rfecv.fit(self.instances, self.classes)
+      self.featureIndices = rfecv.get_support(indices=True)
+      plt.figure()
+      plt.xlabel("Number of features selected")
+      plt.ylabel("Cross validation score (AUC)")
+      plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+      plt.show()
+
+    elif opttype == 2:
+      rfecv = RFECV(estimator=model, step=1, cv=cross_validation.StratifiedKFold(self.classes, 2),
+                scoring='f1',verbose = 5)
+      rfecv.fit(self.instances, self.classes)
+      self.featureIndices = rfecv.get_support(indices=True)
+      plt.figure()
+      plt.xlabel("Number of features selected")
+      plt.ylabel("Cross validation score (f-measure)")
+      plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+      plt.show()
+
+    elif opttype == 3:
+      rfecv = RFECV(estimator=model, step=1, cv=cross_validation.StratifiedKFold(self.classes, 2),
+                scoring='accuracy',verbose = 5)
+      rfecv.fit(self.instances, self.classes)
+      self.featureIndices = rfecv.get_support(indices=True)
+      plt.figure()
+      plt.xlabel("Number of features selected")
+      plt.ylabel("Cross validation score (accuracy)")
+      plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+      plt.show()
+
+    elif opttype == 4:
+      rfecv = RFECV(estimator=model, step=1, cv=cross_validation.StratifiedKFold(self.classes, 2),
+                scoring='recall',verbose = 5)
+      rfecv.fit(self.instances, self.classes)
+      self.featureIndices = rfecv.get_support(indices=True)
+      plt.figure()
+      plt.xlabel("Number of features selected")
+      plt.ylabel("Cross validation score (recall)")
+      plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+      plt.show()
+
+    elif opttype == 5:
+      rfecv = RFECV(estimator=model, step=1, cv=cross_validation.StratifiedKFold(self.classes, 2),
+                scoring='average_precision',verbose = 5)
+      rfecv.fit(self.instances, self.classes)
+      self.featureIndices = rfecv.get_support(indices=True)
+      #plt.figure()
+      #plt.xlabel("Number of features selected")
+      #plt.ylabel("Cross validation score (precision)")
+      #plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+      #plt.show()
+
+    featureSelectionData = pickle.dumps(self.featureIndices)
+    f = open(outputFile,"w")
+    f.write(featureSelectionData)
+    f.close()
+    return self.featureIndices
 
   def setFeaturesFromSelector(self,featureSelectorFile):
     f = open(featureSelectorFile)
@@ -160,7 +229,7 @@ class ModelBuilder():
       num_trees = np.arange(1,maxTrees,stepSize)
       param_grid = dict(n_estimators = num_trees)
       cv = cross_validation.StratifiedKFold(y=self.classes, n_folds=folds)
-      grid = grid_search.GridSearchCV(ensemble.RandomForestClassifier(), param_grid=param_grid, cv=cv, verbose=5, n_jobs=jobs)
+      grid = grid_search.GridSearchCV(ensemble.RandomForestClassifier(), param_grid=param_grid, cv=cv, verbose=5, n_jobs=jobs, scoring='roc_auc')
       grid.fit(self.instances, self.classes)
       classifier = grid.best_estimator_
       classifier.fit(self.instances, self.classes)
@@ -205,7 +274,7 @@ class ModelBuilder():
     f.write(modelData)
     f.close()
 
-  def evaluateModel(self,modelFile):
+  def evaluateModel(self,modelFile,plotROC = False,modelType = 0):
     f = open(modelFile)
     modelData = f.read()
     classifier = pickle.loads(modelData)
@@ -230,7 +299,41 @@ class ModelBuilder():
 
     fmeasure = 2*(precision*recall) / (precision + recall + 0.000001)
 
-    return[precision, recall, fmeasure, accuracy]
+    y_score = None
+
+    if modelType == 0:
+      y_score = classifier.predict_proba(self.instances[:][:])
+    else:
+      y_score = classifier.decision_function(self.instances[:][:])
+
+    y_score = y_score[:,1]
+
+    #Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(1):
+        fpr[i], tpr[i], _ = roc_curve(self.classes[:], y_score[:])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    if plotROC:
+
+      # Plot ROC curve
+      plt.figure()
+      for i in range(1):
+          plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
+                                         ''.format(i+1, roc_auc[i]))
+
+      plt.plot([0, 1], [0, 1], 'k--')
+      plt.xlim([0.0, 1.0])
+      plt.ylim([0.0, 1.05])
+      plt.xlabel('False Positive Rate')
+      plt.ylabel('True Positive Rate')
+      plt.title('ROC Curve: White to Kill')
+      plt.legend(loc="lower right")
+      plt.show()
+
+    return[precision, recall, fmeasure, accuracy, roc_auc[0]]
 
 class Model():
   # 0:SVM, 1:Anything else
@@ -271,6 +374,9 @@ class Model():
 
   def selectFeatures(self):
     self.instances = self.instances[:,self.featureIndices]
+
+  def setFeatures(self,features):
+    self.instances = self.instances[:,features]
 
   def classify(self,instance):
     predictions = self.classifier.predict(instance)

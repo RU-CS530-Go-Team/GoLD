@@ -99,8 +99,8 @@ def view_problems(file_list):
                     except TypeError as te:
                         print(te)
                     '''
-                #except Exception as e:
-                #    print('Unexpected Error: {}'.format(e))
+                except Exception as e:
+                    print('Unexpected Error: {}'.format(e))
 
         else:
             try:
