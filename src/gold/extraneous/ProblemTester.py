@@ -116,6 +116,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     maxnodecount=0
     while( move not in solutionStates and pathLength<maxpathlength):
         color = 'B' if isblack else 'W'
+        moves=len(mmt.children)
         nextMove = mmt.decideNextMove()
         if nextMove is None:
             print('Pass.')
@@ -139,7 +140,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         nodecount = mmt.node_count()
         if nodecount>maxnodecount:
             maxnodecount=nodecount
-        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, moves=len(path),prob=prob, etime=time.clock()-start, nodecount=nodecount)
+        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, moves=moves,prob=prob, etime=time.clock()-start, nodecount=nodecount)
         start = time.clock()        
         mmt = nextMove
         
