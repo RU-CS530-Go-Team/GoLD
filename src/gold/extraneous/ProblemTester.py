@@ -22,10 +22,11 @@ from gold.learn.Model import Model
 from glob import glob
 
 class YouLoseException(Exception):
-    def __init__(self, value, path=None):
+    def __init__(self, value, path=None, maxnodecount=None):
         self.value = value
         self.path = path
-
+        self.maxnodecount=maxnodecount
+        
     def __str__(self):
         return repr(self.value)
     
@@ -112,6 +113,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     mmt.extend_tree()
     passed = False
     maxpathlength = 2*longestPath+3
+    maxnodecount=0
     while( move not in solutionStates and pathLength<maxpathlength):
         color = 'B' if isblack else 'W'
         nextMove = mmt.decideNextMove()
@@ -120,8 +122,8 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
             if passed:
                 if mmt.terminal:
                     print('Two passes and Black lives. You win!!')
-                    return path
-                raise YouLoseException('Two passes in a row. You Lose!', path)
+                    return [path,maxnodecount]
+                raise YouLoseException('Two passes in a row. You Lose!', path,maxnodecount)
             passed=True
             continue
         elif passed:
@@ -134,27 +136,31 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
                 prob = nextMove.value +10.0
         else:
             prob = nextMove.value
-        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, moves=len(mmt.children),prob=prob, etime=time.clock()-start, nodecount=mmt.node_count())
+        nodecount = mmt.node_count()
+        if nodecount>maxnodecount:
+            maxnodecount=nodecount
+        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, moves=len(mmt.children),prob=prob, etime=time.clock()-start, nodecount=nodecount)
         start = time.clock()        
         mmt = nextMove
+        
         path.append(move.clone())
 
         if move in terminalIncorrectStates:
-            raise YouLoseException('Haha! You lose!', path)
+            raise YouLoseException('Haha! You lose!', path, maxnodecount)
         if move in solutionStates:
             print('Solution matched!! You Win!! ')
-            return path
+            return [path, maxnodecount]
         if mmt.sb is None:
             mmt.sb = len(determineLife(mmt.board,isblack))
         if mmt.sb>sb:
             print('You win!!! Black has groups that are unconditionally alive!')
-            return path
+            return [path, maxnodecount]
         pathLength = pathLength+1
         if pathLength<maxpathlength:
             mmt.promote()
         isblack = not isblack
             
-    raise YouLoseException('Too many moves, you lose!!', path)
+    raise YouLoseException('Too many moves, you lose!!', path, maxnodecount)
         
 
 def parse_problem_filename(probfile):
@@ -192,7 +198,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
         problemType = '1'
         print probfile
         start = time.clock()
-        path = test_problem(mtp, modelBtL, modelWtK)
+        [path, maxnodecount] = test_problem(mtp, modelBtL, modelWtK)
         result= 1
     except UnspecifiedProblemType:
         result= -1
@@ -202,6 +208,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
     except YouLoseException as yle:
         print(yle)
         path = yle.path
+        maxnodecount = yle.maxnodecount
         result= 0
     if result>=0:
         if outputfile is not None:
@@ -209,7 +216,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
             fout = open(outputfile, 'a')
             fout.write('{},{},{},{},{},'.format(problemId, problemType,difficulty,mtp.start.x, mtp.start.y))
             fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
-            fout.write('{},{:.1f},{}\n'.format(len(path), etime, result))
+            fout.write('{},{},{:.1f},{}\n'.format(len(path), maxnodecount,etime, result))
             fout.close()
         if show and result>=0:
             ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
@@ -226,6 +233,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
     #test_problem(sys.argv[1], modelBtL, modelWtK)
     MinMaxTree.maxdepth=maxdepth
     problemsDone = set()
+    header = 'PROBLEM,TYPE,DIFFICULTY,X,Y,SEARCH,DEPTH,BEAM,MOVES,MAXNODES,TIME,RESULT'
     if not rerun:
         try:
             with open(outputfile, 'r') as csvin: 
@@ -235,14 +243,12 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
         except Exception as e:
             print(e)
             with open(outputfile, 'w') as fout:
-                fout.write('PROBLEM,TYPE,DIFFICULTY,X,Y,SEARCH,DEPTH,BEAM,MOVES,TIME,RESULT\n')
+                fout.write('{}\n'.format(header))
                 
     elif not isfile(outputfile):
         with open(outputfile, 'w') as fout:
-            fout.write('PROBLEM,TYPE,DIFFICULTY,X,Y,SEARCH,DEPTH,BEAM,MOVES,TIME,RESULT\n')
+            fout.write('{}\n'.format(header))
                     
-    #with open(outputfile, 'a') as fout:
-    seed(1234567890)
     totalNumCorrect = 0
     totalTotal = 0
     for problemDir in probdirs:
@@ -265,7 +271,6 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
 
         else:
             dirs = glob(problemDir+'/*')
-            shuffle(dirs)
             for probdiff in dirs:
                 if isdir(probdiff):
                     files = glob(probdiff+'/*.sgf')
@@ -281,7 +286,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                         
                 else:
                     if probdiff[-3:]=='sgf':
-                        result = call_test_problem(probdiff, modelBtL, modelWtK, outputfile, skip=problemsDone)
+                        result = call_test_problem(probdiff, modelBtL, modelWtK, outputfile, skip=problemsDone,show=show)
                         if result>=0:
                             numTotal+=1
                             if result>0:
