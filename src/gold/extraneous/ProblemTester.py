@@ -139,7 +139,7 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
         nodecount = mmt.node_count()
         if nodecount>maxnodecount:
             maxnodecount=nodecount
-        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, moves=len(mmt.children),prob=prob, etime=time.clock()-start, nodecount=nodecount)
+        print_move('{}({},{})'.format(color,nextMove.i, nextMove.j), move, sb=sb, sw=sw, moves=len(path),prob=prob, etime=time.clock()-start, nodecount=nodecount)
         start = time.clock()        
         mmt = nextMove
         
