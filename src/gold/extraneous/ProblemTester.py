@@ -95,6 +95,48 @@ def get_terminal_states(mtp):
         print('------------')
     return [solutionStates, terminalIncorrectStates, longestPath]
 
+def translate_dimensions_to_sgf(stone, xmin, xmax, ymin, ymax):
+    x = stone[0]+int(xmin)
+    y = stone[1]+int(ymin)
+    xc = chr(ord('a')+x)
+    yc = chr(ord('a')+y)
+    coord_string = '{}{}'.format(yc,xc)
+    return coord_string
+
+def write_problem(results_dir, mtp, problemId, probtype, difficulty, path, result):
+    fname = '{}/{}-result.sgf'.format(results_dir, problemId)
+    pout = open(fname, 'w')
+    #mtp =MoveTreeParser(gameFile)
+    [xmin, xmax] = [mtp.boardDimensions["xMin"],mtp.boardDimensions["xMax"]]
+    [ymin, ymax] = [mtp.boardDimensions["yMin"],mtp.boardDimensions["yMax"]]
+    board = mtp.start
+    pout.write('(;GE[life and death]DI[{}]DP[{}]SO[xxxx]CO[9]'.format(difficulty, len(path)))
+    for color,stones in [['W',board.white_stones], ['B',board.black_stones]]:
+        for stone in stones:
+            coord_string = translate_dimensions_to_sgf(stone, xmin, xmax, ymin, ymax)
+            pout.write('A{}[{}]'.format(color, coord_string))
+    pout.write('C[black to live]AP[gold]\n(')
+    white = mtp.start.white_stones
+    black = mtp.start.black_stones
+    for move in path[1:]:
+        new_white = [x for x in move.white_stones if x not in white]
+        new_black = [x for x in move.black_stones if x not in black]
+        white = move.white_stones
+        black = move.black_stones
+        if len(new_white)==1:
+            pout.write(';W[{}]'.format(translate_dimensions_to_sgf(new_white[0], xmin, xmax, ymin, ymax)))
+        elif len(new_black)==1:
+            pout.write(';B[{}]'.format(translate_dimensions_to_sgf(new_black[0], xmin, xmax, ymin, ymax)))
+        else:
+            raise ValueError('I expected either 1 new white piece or 1 new black piece.')
+    if result==0:
+        res_str = 'Too many moves, you lose!!'
+    elif result>0:
+        res_str = 'You win!! Black has groups that are unconditionally alive! RIGHT'
+    pout.write('C[GoLD result: {}]))'.format(res_str))
+    pout.close()
+
+    
 def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     [solutionStates, terminalIncorrectStates, longestPath] = get_terminal_states(mtp)
 
@@ -176,7 +218,7 @@ def parse_problem_filename(probfile):
     problemId = problemId.split('.')[-2]
     return [problemId, difficulty]
 
-def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(), show=False):
+def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(), show=False, results_dir=None):
     ''' Returns 1 if problem is solved
         Returns 0 if problem could not be solved
         Returns -1 if problem could not be executed
@@ -219,6 +261,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
             fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
             fout.write('{},{},{:.1f},{}\n'.format(len(path)-1, maxnodecount,etime, result))
             fout.close()
+            write_problem(results_dir, mtp,problemId, problemType, difficulty, path, result)
         if show and result>=0:
             ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
             ui.showPath(path)
@@ -229,7 +272,7 @@ def load_model(modelFile, modelType, scalerFile):
     model.setScaler(scalerFile)
     return model
 
-def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdepth=3, show=False):
+def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdepth=3, show=False, results_dir=None):
     
     #test_problem(sys.argv[1], modelBtL, modelWtK)
     MinMaxTree.maxdepth=maxdepth
@@ -260,7 +303,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
             if len(problemDir)<3:
                 print('Not a dir or problem file: {}'.format(problemDir))
             elif problemDir[-3:]=='sgf':
-                result = call_test_problem(problemDir, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show)
+                result = call_test_problem(problemDir, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show, results_dir=results_dir)
                 if result>=0:
                     numTotal+=1
                     if result>0:
@@ -314,6 +357,7 @@ if __name__ == '__main__':
     parser.add_argument('--btl_model_type', default=1, type=int, required=False, choices=[0,1], help='BtL model type (0=SVM, 1=other)')
     parser.add_argument('--wtk_model_type', default=1, type=int, required=False, choices=[0,1], help='WtK model type (0=SVM, 1=other)')
     parser.add_argument('--beam_size', default=50, metavar='int', type=int, choices=[x+1 for x in range(100)], help='Breadth limit for top level search')
+    parser.add_argument('--results_dir', default=None, help='Directory for writing resulting path to .sgf files')
     parser.add_argument('model_dir', help='location of machine learning models')
     parser.add_argument('problem_dir_or_file', nargs='+', help='path to problem directory or file')
     args = parser.parse_args()
@@ -341,5 +385,9 @@ if __name__ == '__main__':
         outputfile = modelDir+'/problem-test-results.txt'
     else:
         outputfile = args.output_file
-    test_problems(modelBtL, modelWtK, problemDirs, outputfile, rerun=args.rerun_problems, maxdepth=args.max_depth, show=args.show_board)
+    if args.results_dir is None:
+        resultsdir = modelDir
+    else:
+        resultsdir = args.results_dir
+    test_problems(modelBtL, modelWtK, problemDirs, outputfile, rerun=args.rerun_problems, maxdepth=args.max_depth, show=args.show_board, results_dir=resultsdir)
     
