@@ -376,7 +376,7 @@ if __name__ == '__main__':
     modelType = args.wtk_model_type 
     scalerFile = modelDir+'/trainfeaturesWtKScaler.txt'
     modelWtK = load_model(modelFile, modelType, scalerFile)
-    print('Loading model and scaler files...')
+    print('Loading model and scaler files from {}...'.format(modelDir))
     problemDirs = args.problem_dir_or_file
 
     MinMaxTree.beamsize = args.beam_size
@@ -385,7 +385,7 @@ if __name__ == '__main__':
         outputfile = modelDir+'/problem-test-results.txt'
     else:
         outputfile = args.output_file
-    if args.results_dir is None:
+    if args.results_dir is None or args.results_dir=='None':
         resultsdir = modelDir
     else:
         resultsdir = args.results_dir
