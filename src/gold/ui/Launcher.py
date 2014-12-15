@@ -3,14 +3,11 @@ Created on Oct 21, 2014
 
 @author: JBlackmore
 '''
-#from Tkinter import *
+import sys
 from Tkinter import *
-#from gold.models.Problem import Problem
 from gold.models.board import Board, IllegalMove
-#from gold.models.search import MinMaxTree
 from gold.extraneous.life import determineLife
 from gold.extraneous.MoveTreeParser import MoveTreeParser
-from gold.learn.trainer import FeatureExtractor
 
 DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 400
@@ -29,14 +26,8 @@ class ResizingCanvas(Canvas):
         
     def on_resize(self, event):
         self.parent.update()
-        #geo = self.parent.geometry()
-        print('-{},{}'.format(event.width, event.height))
         self.width = self.parent.winfo_width()
         self.height = self.parent.winfo_height()-42 # for the title bar I guess
-        #self.width=event.width
-        #self.height=event.height
-        #self.config(width=self.width, height=self.height)
-        print(self.width, self.height)
         self.launcher.resize(self.width, self.height)
         
 class Launcher:
@@ -54,8 +45,9 @@ class Launcher:
         self.diam = (float(dim_x)-2*float(margin))/float(self.spaces-1)
         self.master = Tk()
         self.master.resizable(True, True)
-        self.board_frame = Frame(width=self.dim_x, height=dim_y, bg='#d8af4f')
-        self.board_frame.pack(side=TOP, fill=BOTH, expand=YES)
+        self.master.configure(bg='#d8af4f')
+        #self.board_frame = Frame(width=self.dim_x, height=dim_y, bg='#d8af4f')
+        #self.board_frame.pack(side=TOP, fill=BOTH, expand=YES)
         #self.scaler_frame =Frame(width=self.dim_x, height=42, bg='#d8af4f')
         #self.scaler_frame.pack(side=BOTTOM, fill=X, expand=YES)
         self.C = None
@@ -78,13 +70,7 @@ class Launcher:
             return
         self.dim_x = x
         self.dim_y = y
-        #self.ovals=[]
         self.diam = (float(min(x,y))-2*float(self.margin))/float(self.spaces-1)
-        #self.master = Tk()
-        
-        #self.C.destroy()
-        #self.C = ResizingCanvas(self.board_frame, self, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
-        #self.C.pack(side=TOP, fill=BOTH, expand=YES)
         self.drawGrid()
         self.drawBoard()
         
@@ -139,13 +125,13 @@ class Launcher:
         if( alive ):
             self.ovals.append(self.C.create_oval(x0-2, y0-2, x0+1, y0+1, fill='green', tags=color))
     def setBoardIndex(self, index):
-        self.setBoard(self.boards[int(index)-1])
+        self.setBoard(self.boards[int(index)])
         self.drawBoard()
         
     def showPath(self, boards):
         self.boards = boards
-        scale = Scale(self.master, orient=HORIZONTAL, from_=1, to=len(boards), command=self.setBoardIndex)
-        scale.pack(side=BOTTOM)
+        scale = Scale(self.master, orient=HORIZONTAL, from_=0, to=len(boards)-1, command=self.setBoardIndex, bg='#d8af4f',highlightthickness=0)
+        scale.pack(side=BOTTOM, padx=10, pady=10, expand=NO)
         self.setBoard(boards[0])
         self.drawBoard()
         self.mainloop()
@@ -163,14 +149,15 @@ class Launcher:
     def drawGrid(self):
         if self.C is None:
             #self.C.destroy()
-            self.C = ResizingCanvas(self.board_frame, self, width=self.dim_x, height=self.dim_y, highlightthickness=0, bg='#d8af4f')
+            self.C = ResizingCanvas(self.master, self, width=self.dim_x, height=self.dim_y, highlightthickness=0, bg='#d8af4f')
             #self.C.grid(row=0,column=0, sticky=tkinter.N+tkinter.S+tkinter.W+tkinter.E)
         
         self.C.pack(side=TOP, fill=BOTH, expand=YES)
         self.C.delete(ALL)
         for i in range(self.spaces):
-            self.C.create_line(self.margin, self.margin+i*self.diam, self.dim_x-self.margin, self.margin+i*self.diam)
-            self.C.create_line(self.margin+i*self.diam, self.margin, self.margin+i*self.diam, self.dim_y-self.margin )
+            bound = min(self.dim_x, self.dim_y)
+            self.C.create_line(self.margin, self.margin+i*self.diam, bound-self.margin, self.margin+i*self.diam)
+            self.C.create_line(self.margin+i*self.diam, self.margin, self.margin+i*self.diam, bound-self.margin )
         self.drawPoint(3, 3)
         self.drawPoint(3, self.spaces-4)
         self.drawPoint(self.spaces-4, 3)
