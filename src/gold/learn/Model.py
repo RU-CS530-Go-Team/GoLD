@@ -375,8 +375,8 @@ class Model():
   def selectFeatures(self):
     self.instances = self.instances[:,self.featureIndices]
 
-  def setFeatures(self,features):
-    self.instances = self.instances[:,features]
+  def setFeatures(self,instance,features):
+    return instance[features]
 
   def classify(self,instance):
     predictions = self.classifier.predict(instance)
