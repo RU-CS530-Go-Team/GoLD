@@ -3,8 +3,8 @@ Created on Oct 21, 2014
 
 @author: JBlackmore
 '''
+#from Tkinter import *
 from Tkinter import *
-
 #from gold.models.Problem import Problem
 from gold.models.board import Board, IllegalMove
 #from gold.models.search import MinMaxTree
@@ -20,6 +20,25 @@ DEFAULT_SPACES = 19
 ''' Places a stone of color 'color' on the
     space nearest (x, y) on Canvas C.
 '''
+class ResizingCanvas(Canvas):
+    def __init__(self, parent, launcher, **kwargs):
+        Canvas.__init__(self, parent, **kwargs)
+        self.parent=parent
+        self.bind('<Configure>', self.on_resize)
+        self.launcher = launcher
+        
+    def on_resize(self, event):
+        self.parent.update()
+        #geo = self.parent.geometry()
+        print('-{},{}'.format(event.width, event.height))
+        self.width = self.parent.winfo_width()
+        self.height = self.parent.winfo_height()-42 # for the title bar I guess
+        #self.width=event.width
+        #self.height=event.height
+        #self.config(width=self.width, height=self.height)
+        print(self.width, self.height)
+        self.launcher.resize(self.width, self.height)
+        
 class Launcher:
     def __init__(self, dim_x, dim_y, margin, spaces, board=None):
         self.dim_x = dim_x
@@ -34,9 +53,15 @@ class Launcher:
             self.spaces = max(board.x, board.y)
         self.diam = (float(dim_x)-2*float(margin))/float(self.spaces-1)
         self.master = Tk()
-        self.C = Canvas(self.master, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
-        self.C.pack()
+        self.master.resizable(True, True)
+        self.board_frame = Frame(width=self.dim_x, height=dim_y, bg='#d8af4f')
+        self.board_frame.pack(side=TOP, fill=BOTH, expand=YES)
+        #self.scaler_frame =Frame(width=self.dim_x, height=42, bg='#d8af4f')
+        #self.scaler_frame.pack(side=BOTTOM, fill=X, expand=YES)
+        self.C = None
         self.drawGrid()
+        self.master.rowconfigure(0, weight=1)
+        self.master.columnconfigure(0, weight=1)
         def callback(event):
             #[i, j] = self.computeSpace(event.x, event.y)
             self.placeStoneNear(event.x, event.y, 'white')
@@ -48,6 +73,21 @@ class Launcher:
         self.C.bind("<Button-1>", callback2)
         self.C.bind("<Button-3>", callback)
 
+    def resize(self, x, y):
+        if x==self.dim_x and y==self.dim_y:
+            return
+        self.dim_x = x
+        self.dim_y = y
+        #self.ovals=[]
+        self.diam = (float(min(x,y))-2*float(self.margin))/float(self.spaces-1)
+        #self.master = Tk()
+        
+        #self.C.destroy()
+        #self.C = ResizingCanvas(self.board_frame, self, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
+        #self.C.pack(side=TOP, fill=BOTH, expand=YES)
+        self.drawGrid()
+        self.drawBoard()
+        
     def goForWhite(self, pi, pj):
         #tree = MinMaxTree(self.board, False, True, 0, 0.0, 'b({},{})'.format(pi,pj))
         #bestMove = tree.decideNextMove()
@@ -121,6 +161,13 @@ class Launcher:
         self.board = newboard
 
     def drawGrid(self):
+        if self.C is None:
+            #self.C.destroy()
+            self.C = ResizingCanvas(self.board_frame, self, width=self.dim_x, height=self.dim_y, highlightthickness=0, bg='#d8af4f')
+            #self.C.grid(row=0,column=0, sticky=tkinter.N+tkinter.S+tkinter.W+tkinter.E)
+        
+        self.C.pack(side=TOP, fill=BOTH, expand=YES)
+        self.C.delete(ALL)
         for i in range(self.spaces):
             self.C.create_line(self.margin, self.margin+i*self.diam, self.dim_x-self.margin, self.margin+i*self.diam)
             self.C.create_line(self.margin+i*self.diam, self.margin, self.margin+i*self.diam, self.dim_y-self.margin )
