@@ -261,6 +261,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
             fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
             fout.write('{},{},{:.1f},{}\n'.format(len(path)-1, maxnodecount,etime, result))
             fout.close()
+            #print('Writing results to {}'.format(results_dir))
             write_problem(results_dir, mtp,problemId, problemType, difficulty, path, result)
         if show and result>=0:
             ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
@@ -320,7 +321,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                     files = glob(probdiff+'/*.sgf')
                     for probfile in files:
                         
-                        result = call_test_problem(probfile, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show)
+                        result = call_test_problem(probfile, modelBtL, modelWtK, outputfile, skip=problemsDone, show=show, results_dir=results_dir)
                         if result>=0:
                             numTotal+=1
                             if result>0:
@@ -330,7 +331,7 @@ def test_problems(modelBtl, modelWtK, probdirs, outputfile, rerun=False, maxdept
                         
                 else:
                     if probdiff[-3:]=='sgf':
-                        result = call_test_problem(probdiff, modelBtL, modelWtK, outputfile, skip=problemsDone,show=show)
+                        result = call_test_problem(probdiff, modelBtL, modelWtK, outputfile, skip=problemsDone,show=show, results_dir=results_dir)
                         if result>=0:
                             numTotal+=1
                             if result>0:
@@ -357,7 +358,7 @@ if __name__ == '__main__':
     parser.add_argument('--btl_model_type', default=1, type=int, required=False, choices=[0,1], help='BtL model type (0=SVM, 1=other)')
     parser.add_argument('--wtk_model_type', default=1, type=int, required=False, choices=[0,1], help='WtK model type (0=SVM, 1=other)')
     parser.add_argument('--beam_size', default=50, metavar='int', type=int, choices=[x+1 for x in range(100)], help='Breadth limit for top level search')
-    parser.add_argument('--results_dir', default=None, help='Directory for writing resulting path to .sgf files')
+    parser.add_argument('--results_dir', default=None, help='Directory for writing resulting path to .sgf files', required=False)
     parser.add_argument('model_dir', help='location of machine learning models')
     parser.add_argument('problem_dir_or_file', nargs='+', help='path to problem directory or file')
     args = parser.parse_args()
@@ -389,5 +390,6 @@ if __name__ == '__main__':
         resultsdir = modelDir
     else:
         resultsdir = args.results_dir
+    print('Setting results_dir to {}'.format(resultsdir))
     test_problems(modelBtL, modelWtK, problemDirs, outputfile, rerun=args.rerun_problems, maxdepth=args.max_depth, show=args.show_board, results_dir=resultsdir)
     
