@@ -159,19 +159,35 @@ def test_problem(mtp, modelBtL, modelWtK, maxdepth=10):
     while( move not in solutionStates and pathLength<maxpathlength):
         color = 'B' if isblack else 'W'
         moves=len(mmt.children)
-        nextMove = mmt.decideNextMove()
-        if nextMove is None:
-            print('Pass.')
-            if passed:
-                if mmt.terminal:
-                    print('Two passes and Black lives. You win!!')
-                    return [path,maxnodecount]
-                raise YouLoseException('Two passes in a row. You Lose!', path,maxnodecount)
-            passed=True
-            continue
-        elif passed:
-            passed =False
-        move.place_stone(nextMove.i, nextMove.j, mmt.isblack)
+        validMove = False
+        illegalMoves = set()
+        while not validMove:
+            nextMove = mmt.decideNextMove()
+            if nextMove is None:
+                print('Pass.')
+                if passed:
+                    if mmt.terminal:
+                        print('Two passes and Black lives. You win!!')
+                        return [path,maxnodecount]
+                    raise YouLoseException('Two passes in a row. You Lose!', path,maxnodecount)
+                passed=True
+                continue
+            elif passed:
+                passed =False
+            try:
+                move.place_stone(nextMove.i, nextMove.j, mmt.isblack)
+                validMove=True
+            except IllegalMove as im:
+                # Rebuild that part of the tree
+                # and prune away the illegal moves
+                print('({},{}): {}'.format(nextMove.i,nextMove.j,im))
+                [i,j] = [nextMove.i,nextMove.j]
+                mmt.prune((i,j))
+                illegalMoves.add((i,j))
+                mmt.promote(extendIfSame=True)
+                for p,q in illegalMoves:
+                    mmt.prune((p,q))
+                nextMove = None
         if nextMove.value is None: 
             if nextMove.terminal:
                 prob = 5.0
@@ -232,6 +248,7 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
         return -1
     #print(probdiff)
     problemType = 'error'
+    start = time.clock()
 
     try:
         mtp = MoveTreeParser(probfile) 
@@ -258,12 +275,12 @@ def call_test_problem(probfile, modelBtL, modelWtK, outputfile=None, skip=set(),
             etime = time.clock()-start
             fout = open(outputfile, 'a')
             fout.write('{},{},{},{},{},'.format(problemId, problemType,difficulty,mtp.start.x, mtp.start.y))
-            fout.write('{},{},{},'.format('BEAM1', MinMaxTree.maxdepth, MinMaxTree.beamsize))
+            fout.write('{},{},{},'.format('BEAMN', MinMaxTree.maxdepth, MinMaxTree.beamsize))
             fout.write('{},{},{:.1f},{}\n'.format(len(path)-1, maxnodecount,etime, result))
             fout.close()
             #print('Writing results to {}'.format(results_dir))
             write_problem(results_dir, mtp,problemId, problemType, difficulty, path, result)
-        if show and result>=0:
+        if show:
             ui = Launcher(400,400,50,max(mtp.start.x, mtp.start.y))
             ui.showPath(path)
     return result

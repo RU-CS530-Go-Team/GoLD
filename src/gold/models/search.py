@@ -145,23 +145,17 @@ class MinMaxTree:
                     move = self.board.clone()
                     try:
                         move.place_stone(i,j,self.isblack)
-                        #mval = self.evaluateMove(move,i,j,self.isblack)
                         if self.isblack:
                             ms = "{} b({},{})".format(self.moveseries, i, j)
                         else:
                             ms = "{} w({},{})".format(self.moveseries, i, j)
-                        #mvstr = '%.03f' %mval
-                        #print('{} = {}'.format(ms, mvstr))
-                        #self.terminal_test(move, i, j, self.isblack)
                         [tt,sb] = self.terminal_test(move, i, j, self.isblack)
                         term_test = self.term_test_to_value(tt, self.isblack)
                         validMove = {'board': move, 'ms': ms, 'x': i, 'y': j, 'term': term_test, 'sb': sb}
                         if term_test is not None and term_test>1.0 and not self.isMinLayer:
                             # This is the solution. Stop and throw away the rest.
-                            #print('{}: Cutting off search A, terminal state found'.format(ms, self.value))
                             return [validMove]
                         if term_test is not None and term_test<1.0 and self.isMinLayer:
-                            #print('{}: Cutting off search C, terminal state found'.format(ms, self.value))
                             return [validMove]
                         validMoves.append(validMove)
                     except IllegalMove:
@@ -211,7 +205,7 @@ class MinMaxTree:
         instance = model.setFeatures(instance,feats)
         prediction = model.getScoreCorrect(instance)
 
-        if self.isMinLayer:
+        if self.isMinLayer: # and not self.blackModel is self.whiteModel:
             return 1.0-prediction
         return prediction
 
@@ -287,7 +281,7 @@ class MinMaxTree:
         return best
 
 
-    def promote(self, newlevel=0):
+    def promote(self, newlevel=0, extendIfSame=False):
         ''' Changes level of node to higher in the tree.
             Default level is 0, making self the new root.
             If newlevel is less than current level, recursively
@@ -295,7 +289,7 @@ class MinMaxTree:
         '''
         if newlevel>self.level:
             raise ValueError('Cannot increase level when promoting ({}>{})'.format(newlevel>self.level))
-        if newlevel==self.level:
+        if newlevel==self.level and not extendIfSame:
             return 0
         self.level=newlevel
         start = time.clock()
@@ -312,7 +306,16 @@ class MinMaxTree:
                 #print('There are now {} nodes total.'.format(self.node_count()))
         return nodes_added
 
-    def prune(self):
+    def prune(self, stone=None):
+        if stone is not None:
+            newChildren = []
+            [x,y]=stone
+            for child in self.children:
+                if child.i!=x or child.j!=y:
+                    newChildren.append(child)
+                else:
+                    print('Pruned illegal move ({},{})'.format(x,y))
+            self.children = newChildren
         if len(self.children)>MinMaxTree.beamsize:
             # Evaluate all moves, choose top k to search to depth d for terminal states
             for child in self.children:
