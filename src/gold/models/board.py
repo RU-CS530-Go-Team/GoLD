@@ -84,6 +84,8 @@ class Board:
         new.white_stones = [x for x in self.white_stones]
         new.black_stones = [x for x in self.black_stones]
         new.prior_moves = [x for x in self.prior_moves]
+        new.zobrist = self.zobrist
+        new.hashval = new.hash()
         return new
 
     def group_stones(self, isblack):
