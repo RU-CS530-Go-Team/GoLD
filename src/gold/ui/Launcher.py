@@ -6,8 +6,8 @@ Created on Oct 21, 2014
 import sys
 from Tkinter import *
 from gold.models.board import Board, IllegalMove
-from gold.extraneous.life import determineLife
-from gold.extraneous.MoveTreeParser import MoveTreeParser
+from gold.models.life import determineLife
+from gold.models.MoveTreeParser import MoveTreeParser
 
 DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 400

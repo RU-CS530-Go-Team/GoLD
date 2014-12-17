@@ -10,15 +10,11 @@ import csv
 import argparse
 
 from gold.ui.Launcher import Launcher
-from gold.extraneous.MoveTreeParser import MoveTreeParser,\
-    UnspecifiedProblemType
+from gold.models.MoveTreeParser import MoveTreeParser, UnspecifiedProblemType
 from gold.models.board import IllegalMove
-from random import seed, shuffle
 from gold.models.search import MinMaxTree
-from gold.extraneous.life import determineLife
-from gold.extraneous.terminalLife import findAliveGroups
+from gold.models.life import determineLife
 from gold.learn.Model import Model
-#from gold.ui.Launcher import Launcher
 from glob import glob
 
 class YouLoseException(Exception):

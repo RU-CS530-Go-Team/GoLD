@@ -2,19 +2,11 @@ from glob import glob
 import sys
 import os
 import time
-from gold.extraneous.MoveTreeParser import MoveTreeParser
-import gold.extraneous.terminalLife
+from gold.utils.TerminalDatabase import TerminalDatabase
+from gold.models.MoveTreeParser import MoveTreeParser
 from gold.models.board import Board, IllegalMove
-from gold.features.StoneCountFeature import StoneCountFeature
-from gold.features.DiffLiberties import DiffLiberties
-from gold.features.DistanceFromCenterFeature import DistanceFromCenterFeature
-from gold.features.ColorFeature import ColorFeature
-from gold.features.numberLiveGroups import numberLiveGroups
-from gold.features.LocalShapesFeature import LocalShapesFeature
-from gold.features.PatchExtractor import PatchExtractor
 from gold.features.SparseDictionaryFeature import SparseDictionaryFeature
 import numpy as np
-import pickle
 
 class SparsePatchCollector():
 

@@ -14,14 +14,16 @@ class Board:
     y = 0
     white_stones = None
     black_stones = None
-
+    zobrist = None
+    
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.white_stones = []
         self.black_stones = []
         self.prior_moves = []
-        self.zobrist = self.init_zobrist()
+        if Board.zobrist is None:
+            Board.zobrist = self.init_zobrist()
         self.hashval = self.hash()
         
     def __str__(self):
@@ -39,7 +41,7 @@ class Board:
     
     def init_zobrist(self):
         hashboard = []
-        for i in range(self.x * self.y):
+        for i in range(19 * 19):
             q = randint(0, (2 ** 50) - 1)
             w = randint(0, (2 ** 50) - 1)
             hashboard.append([q, w])
@@ -56,9 +58,9 @@ class Board:
     def hash(self, old = 0):
         ans = old
         for i, v in sorted(self.black_stones):
-            ans = ans ^ self.zobrist[(i) * (self.y) + v][0]
+            ans = ans ^ Board.zobrist[(i) * (19) + v][0]
         for i, v in sorted(self.white_stones):
-            ans = ans ^ self.zobrist[(i) * (self.y) + v][0]
+            ans = ans ^ Board.zobrist[(i) * (19) + v][0]
         return ans 
     
     def __eq__(self, other):
@@ -84,7 +86,7 @@ class Board:
         new.white_stones = [x for x in self.white_stones]
         new.black_stones = [x for x in self.black_stones]
         new.prior_moves = [x for x in self.prior_moves]
-        new.zobrist = self.zobrist
+        #new.zobrist = self.zobrist
         new.hashval = new.hash()
         return new
 

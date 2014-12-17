@@ -2,7 +2,7 @@ from glob import glob
 import sys
 import os
 import time
-from gold.extraneous.MoveTreeParser import MoveTreeParser
+from gold.models.MoveTreeParser import MoveTreeParser
 from gold.models.board import Board, IllegalMove
 
 class SolutionStateParser():

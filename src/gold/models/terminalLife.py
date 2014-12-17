@@ -1,4 +1,4 @@
-from life import *
+from gold.models.life import *
 from gold.models.board import Board, IllegalMove
 #from board import Board, IllegalMove
 from copy import deepcopy

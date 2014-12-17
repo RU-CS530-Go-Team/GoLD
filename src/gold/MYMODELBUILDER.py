@@ -1,5 +1,4 @@
 from gold.learn.ModelEvaluator import ModelEvaluator
-from gold.learn.trainer import MoveTrainer
 from gold.learn.Model import ModelBuilder
 from gold.learn.Model import Model
 

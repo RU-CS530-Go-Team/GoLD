@@ -4,8 +4,8 @@ Created on Nov 1, 2014
 @author: JBlackmore
 '''
 from gold.models.board import IllegalMove
-from gold.learn.trainer import FeatureExtractor
-from gold.extraneous.life import determineLife
+from gold.features.trainer import FeatureExtractor
+from gold.models.life import determineLife
 from gold.models.cache import Cache
 from gold.features import StoneCountFeature
 
