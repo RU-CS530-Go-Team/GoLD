@@ -3,7 +3,7 @@ Created on Nov 28, 2014
 
 @author: JGang
 '''
-from gold.extraneous.life import determineLife
+from gold.models.life import determineLife
 from gold.models.board import StoneGrouper
 from Feature import Feature
 

@@ -5,7 +5,7 @@ Created on Dec 7, 2014
 '''
 import sys
 import csv
-from gold.extraneous.csv_analyzer import build_contingency_table
+from gold.utils.csv_analyzer import build_contingency_table
 
 def check_filter(row, key, val, op):
     if op=='=' or op=='==':

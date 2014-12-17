@@ -2,8 +2,8 @@ from glob import glob
 import sys
 import os
 import time
-from gold.extraneous.MoveTreeParser import MoveTreeParser
-import gold.extraneous.terminalLife
+from gold.models.MoveTreeParser import MoveTreeParser
+import gold.models.terminalLife
 from gold.models.board import Board, IllegalMove
 import numpy as np
 import pickle
@@ -60,7 +60,7 @@ class TerminalDatabase():
                             print move
                             print move.black_stones
                             print move.white_stones
-                            aliveGroups = gold.extraneous.terminalLife.findAliveGroups(move, saysblack)
+                            aliveGroups = gold.models.terminalLife.findAliveGroups(move, saysblack)
                             print aliveGroups
                 except IllegalMove as e:
                     print('{}: ({},{})'.format(e, move_x, move_y,sys.exc_info()[-1].tb_lineno))

@@ -1,6 +1,6 @@
 import sys
 sys.path.append("/Users/zacharydaniels/Documents/GoLD/src/")
-from gold.learn.trainer import MoveTrainer
+from gold.features.trainer import MoveTrainer
 from gold.learn.Model import ModelBuilder
 from gold.learn.Model import Model
 

@@ -1,7 +1,7 @@
 import sys
 import glob
 sys.path.append("c:/Users/jblackmore/Documents/Development/Rutgers/GoLD/problems/resplit/")
-from gold.learn.trainer import MoveTrainer
+from gold.features.trainer import MoveTrainer
 from gold.learn.Model import ModelBuilder
 #from gold.learn.Model import Model
 

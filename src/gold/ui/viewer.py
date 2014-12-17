@@ -6,10 +6,10 @@ Created on Dec 7, 2014
 import sys
 import os
 from glob import glob
-from gold.extraneous.MoveTreeParser import MoveTreeParser
-from gold.extraneous.life import determineLife
+from gold.models.MoveTreeParser import MoveTreeParser
+from gold.models.life import determineLife
 from gold.ui.Launcher import Launcher
-from gold.extraneous.MoveTreeParser import UnspecifiedProblemType
+from gold.models.MoveTreeParser import UnspecifiedProblemType
 
 def probfile_move_to_board_state(probfile, moveid):
     mtp= MoveTreeParser(probfile)

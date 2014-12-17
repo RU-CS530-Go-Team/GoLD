@@ -8,11 +8,8 @@ import os
 import time
 import csv
 from glob import glob
-from numpy import ndarray, float64
-from types import ListType, IntType, FloatType, StringType
-from gold.extraneous.MoveTreeParser import MoveTreeParser, UnspecifiedProblemType
+from gold.models.MoveTreeParser import MoveTreeParser, UnspecifiedProblemType
 from gold.models.board import Board, IllegalMove
-from gold.features import *
 from gold.features.extractor import FeatureExtractor
 
 class MoveTrainer():

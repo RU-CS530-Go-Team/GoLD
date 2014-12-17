@@ -1,16 +1,14 @@
 import sys
 sys.path.append("/Users/zacharydaniels/Documents/GoLD/src/")
 
-from gold.extraneous.MoveTreeParser import MoveTreeParser,\
-    UnspecifiedProblemType
+from gold.models.MoveTreeParser import MoveTreeParser, UnspecifiedProblemType
 from gold.models.board import Board, IllegalMove
 from random import seed, shuffle
 import os
-from gold.learn.trainer import FeatureExtractor
+from gold.features.trainer import FeatureExtractor
 from gold.models.search import MinMaxTree
 from gold.ui.Launcher import Launcher
-from gold.extraneous.life import determineLife
-from gold.extraneous.terminalLife import findAliveGroups
+from gold.models.life import determineLife
 from gold.learn.Model import Model
 from glob import glob
 
