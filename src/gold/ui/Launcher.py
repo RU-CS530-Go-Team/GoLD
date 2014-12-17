@@ -3,14 +3,11 @@ Created on Oct 21, 2014
 
 @author: JBlackmore
 '''
+import sys
 from Tkinter import *
-
-#from gold.models.Problem import Problem
 from gold.models.board import Board, IllegalMove
-#from gold.models.search import MinMaxTree
 from gold.extraneous.life import determineLife
 from gold.extraneous.MoveTreeParser import MoveTreeParser
-from gold.learn.trainer import FeatureExtractor
 
 DEFAULT_WIDTH = 400
 DEFAULT_HEIGHT = 400
@@ -20,6 +17,19 @@ DEFAULT_SPACES = 19
 ''' Places a stone of color 'color' on the
     space nearest (x, y) on Canvas C.
 '''
+class ResizingCanvas(Canvas):
+    def __init__(self, parent, launcher, **kwargs):
+        Canvas.__init__(self, parent, **kwargs)
+        self.parent=parent
+        self.bind('<Configure>', self.on_resize)
+        self.launcher = launcher
+        
+    def on_resize(self, event):
+        self.parent.update()
+        self.width = self.parent.winfo_width()
+        self.height = self.parent.winfo_height()-42 # for the title bar I guess
+        self.launcher.resize(self.width, self.height)
+        
 class Launcher:
     def __init__(self, dim_x, dim_y, margin, spaces, board=None):
         self.dim_x = dim_x
@@ -34,9 +44,16 @@ class Launcher:
             self.spaces = max(board.x, board.y)
         self.diam = (float(dim_x)-2*float(margin))/float(self.spaces-1)
         self.master = Tk()
-        self.C = Canvas(self.master, width=self.dim_x, height=self.dim_y, bg='#d8af4f')
-        self.C.pack()
+        self.master.resizable(True, True)
+        self.master.configure(bg='#d8af4f')
+        #self.board_frame = Frame(width=self.dim_x, height=dim_y, bg='#d8af4f')
+        #self.board_frame.pack(side=TOP, fill=BOTH, expand=YES)
+        #self.scaler_frame =Frame(width=self.dim_x, height=42, bg='#d8af4f')
+        #self.scaler_frame.pack(side=BOTTOM, fill=X, expand=YES)
+        self.C = None
         self.drawGrid()
+        self.master.rowconfigure(0, weight=1)
+        self.master.columnconfigure(0, weight=1)
         def callback(event):
             #[i, j] = self.computeSpace(event.x, event.y)
             self.placeStoneNear(event.x, event.y, 'white')
@@ -48,6 +65,15 @@ class Launcher:
         self.C.bind("<Button-1>", callback2)
         self.C.bind("<Button-3>", callback)
 
+    def resize(self, x, y):
+        if x==self.dim_x and y==self.dim_y:
+            return
+        self.dim_x = x
+        self.dim_y = y
+        self.diam = (float(min(x,y))-2*float(self.margin))/float(self.spaces-1)
+        self.drawGrid()
+        self.drawBoard()
+        
     def goForWhite(self, pi, pj):
         #tree = MinMaxTree(self.board, False, True, 0, 0.0, 'b({},{})'.format(pi,pj))
         #bestMove = tree.decideNextMove()
@@ -99,13 +125,13 @@ class Launcher:
         if( alive ):
             self.ovals.append(self.C.create_oval(x0-2, y0-2, x0+1, y0+1, fill='green', tags=color))
     def setBoardIndex(self, index):
-        self.setBoard(self.boards[int(index)-1])
+        self.setBoard(self.boards[int(index)])
         self.drawBoard()
         
     def showPath(self, boards):
         self.boards = boards
-        scale = Scale(self.master, orient=HORIZONTAL, from_=1, to=len(boards), command=self.setBoardIndex)
-        scale.pack(side=BOTTOM)
+        scale = Scale(self.master, orient=HORIZONTAL, from_=0, to=len(boards)-1, command=self.setBoardIndex, bg='#d8af4f',highlightthickness=0)
+        scale.pack(side=BOTTOM, padx=10, pady=10, expand=NO)
         self.setBoard(boards[0])
         self.drawBoard()
         self.mainloop()
@@ -121,9 +147,17 @@ class Launcher:
         self.board = newboard
 
     def drawGrid(self):
+        if self.C is None:
+            #self.C.destroy()
+            self.C = ResizingCanvas(self.master, self, width=self.dim_x, height=self.dim_y, highlightthickness=0, bg='#d8af4f')
+            #self.C.grid(row=0,column=0, sticky=tkinter.N+tkinter.S+tkinter.W+tkinter.E)
+        
+        self.C.pack(side=TOP, fill=BOTH, expand=YES)
+        self.C.delete(ALL)
         for i in range(self.spaces):
-            self.C.create_line(self.margin, self.margin+i*self.diam, self.dim_x-self.margin, self.margin+i*self.diam)
-            self.C.create_line(self.margin+i*self.diam, self.margin, self.margin+i*self.diam, self.dim_y-self.margin )
+            bound = min(self.dim_x, self.dim_y)
+            self.C.create_line(self.margin, self.margin+i*self.diam, bound-self.margin, self.margin+i*self.diam)
+            self.C.create_line(self.margin+i*self.diam, self.margin, self.margin+i*self.diam, bound-self.margin )
         self.drawPoint(3, 3)
         self.drawPoint(3, self.spaces-4)
         self.drawPoint(self.spaces-4, 3)
@@ -165,6 +199,51 @@ class Launcher:
 def load_problem_start(f):
     mtp = MoveTreeParser(f)
     return mtp.start
+
+def load_problem_paths(f):
+    mtp = MoveTreeParser(f)
+    #print('{} := {}'.format(f.split('/')[-1].split('\\')[-1], mtp.problemType))
+    sn = mtp.getSolutionNodes()
+    inc = mtp.getIncorrectNodes()
+    probtyp = mtp.getProblemType()
+    if probtyp == 1 or probtyp == 3: #Black to live
+        probtyp = 1
+    elif probtyp == 2 or probtyp == 4: #White to kill
+        probtyp = 2
+    else: #Error should be thrown, but just in case it isn't
+        probtyp = 0
+    paths = mtp.getAllPaths()
+    boards = []
+    for path in paths:
+        start = mtp.start
+        if( len(path)>100 ):
+            print('START NEW PATH (len={}; {})'.format(len(path),f.split('/')[-1]))
+        move = None
+        outcome = 0
+        liveWGr = determineLife(start, False)
+        liveBGr = determineLife(start, True)
+        w = len(liveWGr)
+        b = len(liveBGr)
+        boards.append(start)
+        print('START: w={}, b={}, nw={}, nb={}'.format(w,b,len(start.white_stones),len(start.black_stones)))
+        for mid in path:
+            move_dict = mtp.formatMove(mtp.moveID[mid])
+            saysblack = move_dict['isBlack'] #move_str[0:1]=='B'
+            #print('{}''s turn'.format('black' if saysblack else 'white'))
+            move_y = move_dict['y'] #ord(move_str[2]) - ord('a')
+            move_x = move_dict['x'] #ord(move_str[3]) - ord('a')
+            move = start.clone()
+            try:
+                move.place_stone(move_x, move_y, saysblack)
+                boards.append(move)
+                color = 'B' if saysblack else 'W'
+                print('{}({},{}): w={}, b={}, nw={}, nb={}'.format(color,move_x,move_y,w,b,len(move.white_stones),len(move.black_stones)))
+            except IllegalMove as e:
+                print('{}: ({},{})'.format(e, move_x, move_y))
+            start = move
+        if outcome==1: 
+            return move
+    return boards
 
 def load_problem_solution(f):
     mtp = MoveTreeParser(f)
@@ -240,10 +319,11 @@ def load_problem_solution(f):
 if __name__ == '__main__':
     print("Starting GoLD...")
     if len(sys.argv)>1:
-        solution = load_problem_start(sys.argv[1])
-        ui = Launcher(380,380,50,19,board=solution)
+        #solution = load_problem_start(sys.argv[1])
+        paths = load_problem_paths(sys.argv[1])
+        ui = Launcher(400,400,50,19,board=paths[0])
+        ui.showPath(paths)
     else:
         ui = Launcher(400,400,50,19)
-    
-    ui.drawBoard()
-    ui.mainloop()
+        ui.drawBoard()
+        ui.mainloop()

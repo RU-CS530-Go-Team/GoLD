@@ -84,6 +84,8 @@ class Board:
         new.white_stones = [x for x in self.white_stones]
         new.black_stones = [x for x in self.black_stones]
         new.prior_moves = [x for x in self.prior_moves]
+        new.zobrist = self.zobrist
+        new.hashval = new.hash()
         return new
 
     def group_stones(self, isblack):
@@ -93,18 +95,8 @@ class Board:
             stones = [{x} for x in self.white_stones]
         # union-find
 
-    def is_ko(self, x, y, isblack):
-        if len(self.prior_moves) < 2:
-            return False
-        if not (self.prior_moves[0][1] and self.prior_moves[1][1]):
-            return False
-        if not ((self.prior_moves[0][2] == isblack) and (self.prior_moves[1][2] == isblack)):
-            return False
-        if not self.alone(x, y, isblack):
-            return False
-        if (x,y) == self.prior_moves[0][0]:
-            return True
-        return False
+    def is_ko(self):
+        return self.hash() in self.prior_moves
 
     def alone(self, x, y, isblack):
         moves = [(x + 1, y), (x -1, y), (x, y + 1), (x, y - 1)]
@@ -121,20 +113,21 @@ class Board:
             raise IllegalMove("({},{}) is Out of the Bounds of the Go Board".format(x,y))
         elif (x, y) in self.white_stones or (x, y) in self.black_stones:
             raise IllegalMove("({},{}) There is already a stone there".format(x,y))
-        elif self.is_ko(x, y, isblack):
-            raise IllegalMove("Ko")
         elif isblack:
             self.black_stones.append((x, y))
         else:
             self.white_stones.append((x, y))
-        self.prior_moves.append(((x, y), self.alone(x, y, isblack), isblack))
-        if len(self.prior_moves)>=MAX_MOVE_HISTORY:
-            self.prior_moves = self.prior_moves[1:]
         self.update(isblack)
         stones = self.black_stones if isblack else self.white_stones
         if (x, y) not in stones:
             self.black_stones, self.white_stones, self.prior_moves = old
             raise IllegalMove("Suicide is not allowed")
+        elif self.is_ko():
+            self.black_stones, self.white_stones, self.prior_moves = old
+            raise IllegalMove("Ko")
+        self.prior_moves.append(self.hashval)
+        if len(self.prior_moves)>=MAX_MOVE_HISTORY:
+            self.prior_moves = self.prior_moves[1:]
         self.hashval = self.hash()
         
     def update(self, isblack):

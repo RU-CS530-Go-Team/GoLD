@@ -14,7 +14,7 @@ import numpy as np
 from StringIO import StringIO
 
 MAXDEPTH = 3
-BEAMSIZE = 50
+BEAMSIZE = 10
 
 class MinMaxTree:
     '''
@@ -22,7 +22,7 @@ class MinMaxTree:
     '''
     maxdepth = MAXDEPTH
     beamsize = BEAMSIZE
-    
+
     def __init__(self, start, isblack, isMinLayer, blackModel=None, whiteModel=None, level=0, value=None, moveseries='', cache=None):
         '''
         Constructor
@@ -53,7 +53,7 @@ class MinMaxTree:
         for child in self.children:
             count+=child.node_count()
         return count+1
-    
+
     def extend_tree(self):
         if self.level >= MinMaxTree.maxdepth:
             return 0
@@ -65,8 +65,8 @@ class MinMaxTree:
         hasTerm = False
         bestStoneCount = None
         for vm in validMoves:
-            child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer, 
-                               blackModel=self.blackModel, whiteModel=self.whiteModel, 
+            child = MinMaxTree(vm['board'], not self.isblack, not self.isMinLayer,
+                               blackModel=self.blackModel, whiteModel=self.whiteModel,
                                level=self.level+1, moveseries=vm['ms'], cache=self.cache)
             child.i = vm['x']
             child.j = vm['y']
@@ -101,7 +101,7 @@ class MinMaxTree:
 
         if not self.isblack:
             nonterms = [x for x in self.children if not x.terminal]
-            terms = [x for x in self.children if x.terminal]            
+            terms = [x for x in self.children if x.terminal]
             # Prune away terminal cases for white
             if len(nonterms)>0 and len(terms)>0:
                 print('{}: White evades!'.format(nonterms[0].moveseries))
@@ -119,7 +119,7 @@ class MinMaxTree:
                 nodes_added+= child.extend_tree()
 
         return nodes_added
-    
+
     def terminal_test(self, move, i, j, isblack):
         # Use cache for black-is-alive test
         #black_is_alive = self.cache.get(move)
@@ -128,14 +128,14 @@ class MinMaxTree:
             if self.sb is None:
                 self.sb =len(determineLife(self.board, True))
             b = len(determineLife(move, True))
-            
+
             black_is_alive= (b-self.sb)>0
             #self.cache.put(move, black_is_alive)
             result = 2 if black_is_alive else 0
             return [result, b]
         result = 2 if black_is_alive else 0
         return [result, None]
-    
+
     def find_valid_moves(self):
         all_stones = self.board.white_stones+self.board.black_stones
         validMoves = []
@@ -145,23 +145,17 @@ class MinMaxTree:
                     move = self.board.clone()
                     try:
                         move.place_stone(i,j,self.isblack)
-                        #mval = self.evaluateMove(move,i,j,self.isblack)
                         if self.isblack:
                             ms = "{} b({},{})".format(self.moveseries, i, j)
                         else:
                             ms = "{} w({},{})".format(self.moveseries, i, j)
-                        #mvstr = '%.03f' %mval
-                        #print('{} = {}'.format(ms, mvstr))
-                        #self.terminal_test(move, i, j, self.isblack)
                         [tt,sb] = self.terminal_test(move, i, j, self.isblack)
                         term_test = self.term_test_to_value(tt, self.isblack)
                         validMove = {'board': move, 'ms': ms, 'x': i, 'y': j, 'term': term_test, 'sb': sb}
                         if term_test is not None and term_test>1.0 and not self.isMinLayer:
-                            # This is the solution. Stop and throw away the rest. 
-                            #print('{}: Cutting off search A, terminal state found'.format(ms, self.value))
+                            # This is the solution. Stop and throw away the rest.
                             return [validMove]
                         if term_test is not None and term_test<1.0 and self.isMinLayer:
-                            #print('{}: Cutting off search C, terminal state found'.format(ms, self.value))
                             return [validMove]
                         validMoves.append(validMove)
                     except IllegalMove:
@@ -190,7 +184,7 @@ class MinMaxTree:
                     return -1
                 return 2
         return None
-    
+
     def evaluateMove(self, move, i, j, isblack):
         #term_test = self.term_test_to_value(self.terminal_test(move, i, j, isblack), isblack)
         #if term_test is not None:
@@ -207,9 +201,11 @@ class MinMaxTree:
         else:
             model = self.whiteModel
         instance = model.scale(data)
+        feats = [0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 19, 20, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243]
+        instance = model.setFeatures(instance,feats)
         prediction = model.getScoreCorrect(instance)
 
-        if self.isMinLayer:
+        if self.isMinLayer: # and not self.blackModel is self.whiteModel:
             return 1.0-prediction
         return prediction
 
@@ -232,7 +228,7 @@ class MinMaxTree:
                 print(self.moveseries+' White has no moves left! Black will live!')
             return self.children[0]
         childrenToEvaluate = []
-            
+
         for child in self.children:
             if child.terminal:
                 if self.isblack:
@@ -241,7 +237,7 @@ class MinMaxTree:
             else:
                 childsBestChild = child.bestChild()
                 if childsBestChild is child:
-                    # A leaf! Also, non-terminal 
+                    # A leaf! Also, non-terminal
                     if self.level==0:
                         childrenToEvaluate.append(child)
                 elif childsBestChild.terminal:
@@ -277,7 +273,7 @@ class MinMaxTree:
                 best = child
         #if movesEvaluated>0:
             #print('Evaluated {} valid moves in {:.1f} seconds.'.format(movesEvaluated, time.clock()-start))
-            
+
         if best is None:
             if len(self.children)>0:
                 return self.children[0]
@@ -285,7 +281,7 @@ class MinMaxTree:
         return best
 
 
-    def promote(self, newlevel=0):
+    def promote(self, newlevel=0, extendIfSame=False):
         ''' Changes level of node to higher in the tree.
             Default level is 0, making self the new root.
             If newlevel is less than current level, recursively
@@ -293,7 +289,7 @@ class MinMaxTree:
         '''
         if newlevel>self.level:
             raise ValueError('Cannot increase level when promoting ({}>{})'.format(newlevel>self.level))
-        if newlevel==self.level:
+        if newlevel==self.level and not extendIfSame:
             return 0
         self.level=newlevel
         start = time.clock()
@@ -310,7 +306,16 @@ class MinMaxTree:
                 #print('There are now {} nodes total.'.format(self.node_count()))
         return nodes_added
 
-    def prune(self):
+    def prune(self, stone=None):
+        if stone is not None:
+            newChildren = []
+            [x,y]=stone
+            for child in self.children:
+                if child.i!=x or child.j!=y:
+                    newChildren.append(child)
+                else:
+                    print('Pruned illegal move ({},{})'.format(x,y))
+            self.children = newChildren
         if len(self.children)>MinMaxTree.beamsize:
             # Evaluate all moves, choose top k to search to depth d for terminal states
             for child in self.children:
@@ -318,11 +323,10 @@ class MinMaxTree:
             # Search the most likely moves in the proper order
             cutoff = min(MinMaxTree.beamsize, len(self.children)-1)
             self.children= sorted(self.children, key=lambda child: child.value, reverse=(not self.isMinLayer))[:cutoff]
-        
+
     def decideNextMove(self):
         c = self.bestChild()
         if c is self:
             return None
         return c
 #class BeamMMTree(MinMaxTree):
-    
